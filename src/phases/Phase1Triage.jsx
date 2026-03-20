@@ -162,32 +162,32 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   const CONSOLE_ACTIONS = [
     {
       id: 'pause', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
-      label: 'Suspend VM', sub: 'Pause compute hypervisor execution',
+      label: 'Evoke ACPI S3 (Sleep)', sub: 'Trigger hypervisor-level S3 sleep state',
       onClick: handlePause, disabled: actionUsed.pause, used: actionUsed.pause,
     },
     {
       id: 'directram', icon: <HardDrive size={16} />,
-      label: 'Direct RAM Dump', sub: 'Execute LiME kernel module via USB',
+      label: 'Inject LiME LKM', sub: 'Compile and load Linux Memory Extractor',
       onClick: null, disabled: true, tooltip: 'IMPOSSIBLE: No physical hardware access layer in cloud.',
     },
     {
       id: 'ebs', icon: <HardDrive size={16} />,
-      label: 'EBS Snapshot', sub: 'Acquire block storage volumes',
+      label: 'Snapshot Block Device', sub: 'Clone attached non-volatile storage',
       onClick: handleEbs, disabled: actionUsed.ebs, used: actionUsed.ebs,
     },
     {
       id: 'flowlogs', icon: <Activity size={16} />,
-      label: 'Enable Flow Logs', sub: 'Start capturing VPC network metadata',
+      label: 'Activate Flow Logging', sub: 'Capture packet headers at VPC level',
       onClick: handleFlowLogs, disabled: actionUsed.flowlogs, used: actionUsed.flowlogs,
     },
     {
       id: 'poweroff', icon: <Power size={16} />,
-      label: 'Power Off (ACPI)', sub: 'Send shutdown signal to OS',
+      label: 'Evoke ACPI S5 (Off)', sub: 'Send soft shutdown signal to OS',
       onClick: handlePowerOff, disabled: actionUsed.poweroff, used: actionUsed.poweroff,
     },
     {
       id: 'isolate', icon: state.networkIsolated ? <WifiOff size={16} /> : <Wifi size={16} />,
-      label: 'Isolate Network (SG)', sub: 'Drop all VPC ingress/egress rules',
+      label: 'Modify ENI Boundaries', sub: 'Apply default-deny policy to network interface',
       onClick: handleIsolate, disabled: state.networkIsolated,
       active: state.networkIsolated,
     },
@@ -263,7 +263,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
               {[
                 { label: 'VPC', value: 'vpc-0abc123def456' },
                 { label: 'Subnet', value: 'subnet-0123abcdef' },
-                { label: 'Security Group', value: state.networkIsolated ? 'sg-ISOLATED ✓' : 'sg-0xyz789 [OPEN]' },
+                { label: 'Security Group', value: state.networkIsolated ? 'sg-ENI-DENY-ALL ✓' : 'sg-0xyz789 [OPEN]' },
                 { label: 'IAM Profile', value: 'EC2-ProdInstanceRole' },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: 'var(--color-bg)', borderRadius: 4, padding: '0.5rem', border: '1px solid var(--color-border)' }}>
@@ -468,7 +468,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
                 Procedure Checklist
               </div>
               {[
-                { label: 'Isolate Network', done: state.networkIsolated },
+                { label: 'Modify ENI Boundaries', done: state.networkIsolated },
                 { label: 'Identify Malicious Processes', done: state.processesIdentified },
                 { label: 'Verify Instance State', done: state.stateVerified },
                 { label: 'Acquire Memory Snapshot', done: state.snapshotTaken },
