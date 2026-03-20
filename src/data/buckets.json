@@ -1,0 +1,94 @@
+[
+  {
+    "id": "replica-a",
+    "name": "corp-data-backup-prod",
+    "zone": "eu-west-1a",
+    "region": "EU (Ireland)",
+    "awsMetadata": {
+      "x-amz-replication-status": "COMPLETED",
+      "x-amz-storage-class": "STANDARD",
+      "x-amz-server-side-encryption": "aws:kms",
+      "x-amz-object-lock-mode": "GOVERNANCE",
+      "x-amz-version-id": "YkRlM2RRNHlualk3aFhQd2VxUGhBVE5"
+    },
+    "bucketPolicy": "BucketOwnerEnforced",
+    "versioningEnabled": true,
+    "mfaDeleteEnabled": true,
+    "createdAt": "2024-09-01T08:00:00Z",
+    "lastModified": "2024-11-14T04:31:18Z",
+    "replicationTimestamp": null,
+    "objectCount": 1847,
+    "sizeGB": 14.3,
+    "storageClass": "STANDARD",
+    "lifecyclePolicy": "Transition to GLACIER after 365 days",
+    "integrityHash": "sha256:a3f5d8e1c2b74f9a6d0e5f3c8b2a7e1d4f6c9b3a8e2f0d7c5b1a9e6f3d0c7a4",
+    "objects": [
+      { "key": "exfil_dump_20241114.tar.gz", "size": "4.2 GB", "lastModified": "2024-11-14T04:31:18Z", "etag": "\"d41d8cd98f00b204e9800998ecf8427e\"", "contentMD5": "1B2M2Y8AsgTpgAmY7PhCfg==" },
+      { "key": "db_backup_20241113.sql.gz", "size": "2.1 GB", "lastModified": "2024-11-13T22:00:05Z", "etag": "\"a87ff679a2f3e71d9181a67b7542122c\"", "contentMD5": "qH/2eaLzRx2RgaZ7dUIScw==" },
+      { "key": "config_archive.tar.bz2", "size": "120 MB", "lastModified": "2024-11-12T18:44:33Z", "etag": "\"c4ca4238a0b923820dcc509a6f75849b\"", "contentMD5": "xMpCOKC5I4INzFCab3WEmw==" }
+    ],
+    "isPrimary": true,
+    "notes": "Source bucket — owns all write operations. Replication status COMPLETED means this bucket IS the replication source, not a completed replica."
+  },
+  {
+    "id": "replica-b",
+    "name": "corp-data-backup-prod-xregion",
+    "zone": "us-east-1b",
+    "region": "US East (N. Virginia)",
+    "awsMetadata": {
+      "x-amz-replication-status": "COMPLETED",
+      "x-amz-storage-class": "STANDARD_IA",
+      "x-amz-server-side-encryption": "aws:kms",
+      "x-amz-object-lock-mode": null,
+      "x-amz-replication-destination": "corp-data-backup-prod"
+    },
+    "bucketPolicy": "BucketOwnerEnforced",
+    "versioningEnabled": true,
+    "mfaDeleteEnabled": false,
+    "createdAt": "2024-09-01T08:00:00Z",
+    "lastModified": "2024-11-14T04:35:41Z",
+    "replicationTimestamp": "2024-11-14T04:35:41Z",
+    "objectCount": 1847,
+    "sizeGB": 14.3,
+    "storageClass": "STANDARD_IA",
+    "lifecyclePolicy": "Transition to GLACIER after 180 days",
+    "integrityHash": "sha256:a3f5d8e1c2b74f9a6d0e5f3c8b2a7e1d4f6c9b3a8e2f0d7c5b1a9e6f3d0c7a4",
+    "objects": [
+      { "key": "exfil_dump_20241114.tar.gz", "size": "4.2 GB", "lastModified": "2024-11-14T04:35:41Z", "etag": "\"d41d8cd98f00b204e9800998ecf8427e\"", "contentMD5": "1B2M2Y8AsgTpgAmY7PhCfg==" },
+      { "key": "db_backup_20241113.sql.gz", "size": "2.1 GB", "lastModified": "2024-11-13T22:04:17Z", "etag": "\"a87ff679a2f3e71d9181a67b7542122c\"", "contentMD5": "qH/2eaLzRx2RgaZ7dUIScw==" },
+      { "key": "config_archive.tar.bz2", "size": "120 MB", "lastModified": "2024-11-12T18:48:51Z", "etag": "\"c4ca4238a0b923820dcc509a6f75849b\"", "contentMD5": "xMpCOKC5I4INzFCab3WEmw==" }
+    ],
+    "isPrimary": false,
+    "notes": "Cross-region replica. Replication lag: ~4 min 23 sec. x-amz-replication-destination points to the source, confirming secondary status."
+  },
+  {
+    "id": "replica-c",
+    "name": "corp-data-backup-prod-dr-apac",
+    "zone": "ap-southeast-1c",
+    "region": "Asia Pacific (Singapore)",
+    "awsMetadata": {
+      "x-amz-replication-status": "COMPLETED",
+      "x-amz-storage-class": "GLACIER_IR",
+      "x-amz-server-side-encryption": "aws:kms",
+      "x-amz-object-lock-mode": null,
+      "x-amz-replication-destination": "corp-data-backup-prod"
+    },
+    "bucketPolicy": "BucketOwnerEnforced",
+    "versioningEnabled": false,
+    "mfaDeleteEnabled": false,
+    "createdAt": "2024-09-01T08:00:00Z",
+    "lastModified": "2024-11-14T04:17:09Z",
+    "replicationTimestamp": "2024-11-14T04:47:09Z",
+    "objectCount": 1846,
+    "sizeGB": 14.1,
+    "storageClass": "GLACIER_IR",
+    "lifecyclePolicy": "Expire after 90 days",
+    "integrityHash": "sha256:a3f5d8e1c2b74f9a6d0e5f3c8b2a7e1d4f6c9b3a8e2f0d7c5b1a9e6f3d0c7a4",
+    "objects": [
+      { "key": "exfil_dump_20241114.tar.gz", "size": "4.2 GB", "lastModified": "2024-11-14T04:47:09Z", "etag": "\"d41d8cd98f00b204e9800998ecf8427e\"", "contentMD5": "Xj27SyLh9p+mCqPwNtH3Ag==" },
+      { "key": "db_backup_20241113.sql.gz", "size": "2.1 GB", "lastModified": "2024-11-13T22:19:44Z", "etag": "\"a87ff679a2f3e71d9181a67b7542122c\"", "contentMD5": "qH/2eaLzRx2RgaZ7dUIScw==" }
+    ],
+    "isPrimary": false,
+    "notes": "Async DR replica. 17-min lag, 1 missing object (config_archive), versioning disabled, contentMD5 mismatch on first object (async write corruption). Inadmissible."
+  }
+]

