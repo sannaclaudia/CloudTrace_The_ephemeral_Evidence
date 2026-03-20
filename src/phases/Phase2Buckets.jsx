@@ -36,7 +36,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   };
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: 1000, margin: '0 auto' }}>
+    <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)' }}>
       <div className="mb-6">
         <h1 className="text-xl font-bold mb-0.5">Phase 2: Acquisition & Redundancy</h1>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>

@@ -1,4 +1,4 @@
-import { Shield, Info } from 'lucide-react';
+import { Shield, Info, Briefcase } from 'lucide-react';
 import { PHASES } from '../gameState';
 
 const PHASE_LABELS = {
@@ -8,7 +8,7 @@ const PHASE_LABELS = {
   [PHASES.DEBRIEF]: { label: 'Debrief', num: null },
 };
 
-export default function ScoreHUD({ phase, admissibilityScore, onLegend }) {
+export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker, lockerOpen, state }) {
   const phaseInfo = PHASE_LABELS[phase];
   const scoreColor = admissibilityScore >= 80 ? '#22c55e' : admissibilityScore >= 55 ? '#f59e0b' : '#ef4444';
 
@@ -25,6 +25,16 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend }) {
     if (num === currentPhaseNum) return 'active';
     return 'pending';
   };
+
+  // Count collected evidence for locker badge
+  const evidenceCount = [
+    state?.networkIsolated,
+    state?.processesIdentified,
+    state?.snapshotTaken,
+    state?.phase2Correct,
+    state?.attackChainCompleted,
+    state?.phase3Correct,
+  ].filter(Boolean).length;
 
   return (
     <header style={{
@@ -66,19 +76,41 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend }) {
         </div>
       )}
 
-      {/* Right: score + legend */}
-      <div className="flex items-center gap-3">
+      {/* Right: score + buttons */}
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5">
           <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Admissibility:</span>
-          <span className="font-mono font-bold text-sm" style={{ color: scoreColor }}>
-            {admissibilityScore}%
-          </span>
-          <div style={{ width: 48, height: 4, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
+          <span className="font-mono font-bold text-sm" style={{ color: scoreColor }}>{admissibilityScore}%</span>
+          <div style={{ width: 52, height: 4, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${admissibilityScore}%`, background: scoreColor, borderRadius: 2, transition: 'width 0.5s' }} />
           </div>
         </div>
-        <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }} onClick={onLegend} data-tooltip="Open Legend & Glossary (ℹ)">
-          <Info size={15} />
+
+        {/* Evidence Locker button */}
+        <button
+          className="btn btn-ghost"
+          style={{
+            padding: '0.25rem 0.5rem', position: 'relative',
+            ...(lockerOpen ? { background: 'rgba(99,102,241,0.15)', borderColor: 'rgba(99,102,241,0.5)', color: '#a5b4fc' } : {}),
+          }}
+          onClick={onLocker}
+          data-tooltip="Evidence Locker"
+        >
+          <Briefcase size={14} />
+          {evidenceCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -4, right: -4,
+              width: 15, height: 15, borderRadius: '50%',
+              background: 'var(--color-primary)', color: 'white',
+              fontSize: '0.55rem', fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px solid var(--color-surface)',
+            }}>{evidenceCount}</span>
+          )}
+        </button>
+
+        <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }} onClick={onLegend} data-tooltip="Legend & Glossary">
+          <Info size={14} />
         </button>
       </div>
     </header>
