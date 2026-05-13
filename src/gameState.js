@@ -49,6 +49,7 @@ export const ACTIONS = {
   HIDE_HOW_TO_PLAY: 'HIDE_HOW_TO_PLAY',
   SKIP_TUTORIAL: 'SKIP_TUTORIAL',
   ADVANCE_TUTORIAL: 'ADVANCE_TUTORIAL',
+  SET_DIFFICULTY: 'SET_DIFFICULTY',
 
   // Phase 1
   POWER_OFF_VM: 'POWER_OFF_VM',
@@ -94,6 +95,9 @@ export function gameReducer(state, action) {
 
     case ACTIONS.LOAD_STATE:
       return { ...action.payload };
+    
+    case ACTIONS.SET_DIFFICULTY:
+      return { ...state, gameMode: action.payload.gameMode, timerMode: action.payload.timerMode };
 
     case ACTIONS.NEW_GAME: {
       const { gameMode = 'Guided', timerMode = 'Story' } = action.payload || {};
