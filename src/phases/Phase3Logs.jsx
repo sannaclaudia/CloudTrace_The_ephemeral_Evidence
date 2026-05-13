@@ -1,19 +1,30 @@
 import { useState, useMemo } from 'react';
-import { Search, AlertTriangle, Send, HelpCircle, Link, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { Search, AlertTriangle, Send, HelpCircle, Link, CheckCircle, XCircle, RotateCcw, Clock, Shield } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 import logsData from '../data/cloudtrail_logs.json';
 
 const EVENT_COLOR = {
-  RunInstances:        '#ef4444',
-  DeleteTrail:         '#ef4444',
-  AssumeRole:          '#f59e0b',
+  RunInstances: '#ef4444',
+  DeleteTrail: '#ef4444',
+  AssumeRole: '#f59e0b',
   CreateSecurityGroup: '#f59e0b',
-  PutObject:           '#f59e0b',
-  ConsoleLogin:        '#94a3b8',
-  ListBuckets:         '#94a3b8',
-  DescribeInstances:   '#94a3b8',
-  GetCallerIdentity:   '#94a3b8',
+  PutObject: '#f59e0b',
+  ConsoleLogin: '#94a3b8',
+  ListBuckets: '#94a3b8',
+  DescribeInstances: '#94a3b8',
+  GetCallerIdentity: '#94a3b8',
 };
+
+// Key events for the timeline strip (chronological subset)
+const TIMELINE_EVENTS = [
+  { time: '09:12', event: 'GetCallerIdentity', color: '#94a3b8', icon: '🔍', label: 'Recon' },
+  { time: '09:14', event: 'ListBuckets', color: '#94a3b8', icon: '🗂️', label: 'Enum' },
+  { time: '09:21', event: 'AssumeRole ×1', color: '#f59e0b', icon: '🎭', label: 'Pivot 1' },
+  { time: '09:22', event: 'AssumeRole ×2', color: '#f59e0b', icon: '🔗', label: 'Pivot 2' },
+  { time: '09:23', event: 'RunInstances', color: '#ef4444', icon: '💣', label: 'Impact' },
+  { time: '09:31', event: 'PutObject', color: '#f59e0b', icon: '📤', label: 'Exfil' },
+  { time: '09:44', event: 'DeleteTrail', color: '#ef4444', icon: '🗑️', label: 'Cover' },
+];
 
 // Attack chain nodes — shown in scrambled order, must be placed in correct order
 const CHAIN_NODES = [
@@ -84,8 +95,6 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
   const [submitRole, setSubmitRole] = useState('');
   const [wrongModal, setWrongModal] = useState(false);
   const [wrongMsg, setWrongMsg] = useState('');
-  const [showHint, setShowHint] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
   const hintsUsed = state.hintsUsed?.p3 || 0;
 
   // Attack chain state
@@ -127,9 +136,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
   const handleUseHint = () => {
     if (hintsUsed >= 3) return;
     dispatch({ type: ACTIONS.USE_HINT, payload: { phase: 'p3' } });
-    setHintIndex(hintsUsed);
-    setShowHint(true);
-    addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Used`, message: '−5 Admissibility' });
+    addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Unlocked`, message: '−5 Admissibility' });
   };
 
   // Chain reconstruction handlers
@@ -167,141 +174,55 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
     <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)', display: 'flex', flexDirection: 'column' }}>
       <div className="mb-4">
         <h1 className="text-xl font-bold mb-0.5">Phase 3: Log Analysis & Attribution</h1>
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          Trace the attack chain using AWS CloudTrail. Identify the <strong>RunInstances</strong> event, but beware: advanced attackers use{' '}
-          <strong>Role Assumption</strong> to mask their true origin. Trace the session token back to the root compromised IAM credential and true source IP.
+        <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+          You must reconstruct the attack sequence and attribute the breach to its true source.
+          First, arrange the <strong>Attack Chain Nodes</strong> below in chronological order.
+          Then, find the <strong>RunInstances</strong> event in the CloudTrail logs, trace the assumed roles backwards to find the compromised root credential, and submit your findings in the <strong>Attribution</strong> panel on the right.
         </p>
+
+        {/* Guidance & Hints (Visible when requested) */}
+        {hintsUsed > 0 && (
+          <div className="p-4 rounded-lg text-sm" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.3)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <HelpCircle size={16} style={{ color: '#a5b4fc' }} />
+              <span className="font-semibold" style={{ color: '#c7d2fe' }}>Investigation Guidance & Hints</span>
+            </div>
+            <ul className="space-y-2 list-disc list-inside" style={{ color: '#e0e7ff', lineHeight: 1.6 }}>
+              {HINTS.slice(0, hintsUsed).map((hint, i) => (
+                <li key={i}><span style={{ color: '#a5b4fc', fontWeight: 'bold' }}>Hint {i + 1}:</span> {hint}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
-      {/* Hint bar */}
-      {showHint && (
-        <div className="p-3 rounded mb-4 text-xs" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.3)', color: '#c7d2fe' }}>
-          <strong>Hint {hintIndex + 1}:</strong> {HINTS[hintIndex]}
+      {/* ── TIMELINE STRIP ── */}
+      <div className="card mb-4" style={{ background: '#080c14', border: '1px solid var(--color-border)', padding: '0.85rem 1rem' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <Clock size={13} style={{ color: '#a5b4fc' }} />
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#a5b4fc' }}>CloudTrail Event Timeline — Examination Phase (Lec 5 §7.3)</span>
         </div>
-      )}
-
-      {/* Main 2-col layout: log viewer + attribution */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.5rem', marginBottom: '1.5rem' }}>
-
-        {/* Log viewer */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '560px' }}>
-          <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--color-border)', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <Search size={14} style={{ color: 'var(--color-text-dim)', flexShrink: 0 }} />
-            <input
-              className="input"
-              style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'JetBrains Mono, monospace' }}
-              placeholder="Search by IP, Event Name, API Key, Role ARN..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <span className="text-xs font-mono" style={{ color: 'var(--color-text-dim)', flexShrink: 0 }}>
-              {filtered.length}/{logsData.length}
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '130px 160px 1fr 150px', padding: '0.35rem 1rem', borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg)' }}>
-            {['Time (UTC)', 'Event', 'Source IP', 'Identity Type'].map(h => (
-              <div key={h} className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-dim)' }}>{h}</div>
+        <div style={{ position: 'relative', paddingBottom: '1.5rem' }}>
+          {/* Baseline */}
+          <div style={{ position: 'absolute', left: 0, right: 0, top: '1.2rem', height: 2, background: 'linear-gradient(to right, #1e2130, #4f46e5 20%, #ef4444 80%, #1e2130)' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.25rem' }}>
+            {TIMELINE_EVENTS.map((ev, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--color-text-dim)', marginBottom: '0.3rem', fontFamily: 'monospace' }}>{ev.time}</div>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%', zIndex: 1,
+                  background: `${ev.color}22`, border: `2px solid ${ev.color}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.75rem', boxShadow: `0 0 8px ${ev.color}44`,
+                }}>{ev.icon}</div>
+                <div style={{ fontSize: '0.6rem', color: ev.color, fontWeight: 600, marginTop: '0.3rem', textAlign: 'center', lineHeight: 1.2 }}>{ev.label}</div>
+                <div style={{ fontSize: '0.58rem', color: 'var(--color-text-dim)', textAlign: 'center', marginTop: '0.1rem' }}>{ev.event}</div>
+              </div>
             ))}
           </div>
-
-          <div style={{ overflowY: 'auto', flex: 1 }}>
-            {filtered.map(log => {
-              const isExp = expanded === log.id;
-              const color = EVENT_COLOR[log.eventName] || '#94a3b8';
-              return (
-                <div key={log.id} className="log-row" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <div
-                    style={{ display: 'grid', gridTemplateColumns: '130px 160px 1fr 150px', padding: '0.55rem 1rem', cursor: 'pointer' }}
-                    onClick={() => setExpanded(isExp ? null : log.id)}
-                  >
-                    <div className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                      {log.eventTime.split('T')[1].replace('Z', '')}
-                    </div>
-                    <div className="font-mono text-xs font-medium" style={{ color }}>{log.eventName}</div>
-                    <div className="font-mono text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{log.sourceIPAddress}</div>
-                    <div className="font-mono text-xs truncate" style={{ color: 'var(--color-text-dim)' }}>{log.userIdentity?.type}</div>
-                  </div>
-                  {isExp && (
-                    <div style={{ padding: '0 1rem 0.75rem', background: 'var(--color-bg)' }}>
-                      <pre className="font-mono text-xs p-3 rounded overflow-auto" style={{
-                        background: '#060910', border: '1px solid var(--color-border)',
-                        color: '#e0e7ff', maxHeight: 240,
-                      }}>
-                        {JSON.stringify(log, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
-
-        {/* Attribution panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="card">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <AlertTriangle size={15} style={{ color: '#ef4444' }} />
-                <span className="font-semibold text-sm">Root Cause Attribution</span>
-              </div>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
-                onClick={handleUseHint}
-                disabled={hintsUsed >= 3}
-                title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
-              >
-                <HelpCircle size={12} /> Hint ({3 - hintsUsed})
-              </button>
-            </div>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-              Do NOT submit intermediate pivot IPs or temporary tokens. Find the original AKIA credential and the true external attacker IP.
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  True Attacker Source IP
-                </label>
-                <input className="input" placeholder="Not the AWS endpoint..." value={submitIp} onChange={e => setSubmitIp(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Execution Role ARN
-                </label>
-                <input className="input font-mono text-xs" placeholder="arn:aws:iam::..." value={submitRole} onChange={e => setSubmitRole(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Root Compromised IAM Key ID
-                </label>
-                <input className="input font-mono text-xs" placeholder="AKIA..." value={submitKey} onChange={e => setSubmitKey(e.target.value)} />
-              </div>
-            </div>
-
-            <button
-              className="btn btn-primary mt-5 w-full justify-center"
-              onClick={handleSubmit}
-              disabled={!submitIp || !submitKey || !submitRole}
-            >
-              <Send size={14} /> Submit Final Report
-            </button>
-          </div>
-
-          {/* Quick reference */}
-          <div className="card" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)' }}>
-            <div className="text-xs font-semibold mb-2" style={{ color: '#a5b4fc' }}>📚 IAM Key Prefixes</div>
-            <div className="space-y-1.5 font-mono text-xs" style={{ color: 'var(--color-text-dim)' }}>
-              <div><span style={{ color: '#22c55e' }}>AKIA...</span> — Permanent long-term key</div>
-              <div><span style={{ color: '#f59e0b' }}>ASIA...</span> — Temporary session token</div>
-              <div><span style={{ color: '#64748b' }}>AROA...</span> — Role assumed principal</div>
-            </div>
-            <div className="text-xs mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-text-dim)' }}>
-              sessionContext.sessionIssuer shows the role ARN that generated a temporary token.
-            </div>
-          </div>
+        <div className="text-xs" style={{ color: 'var(--color-text-dim)', fontStyle: 'italic' }}>
+          ⚠️ Note: The attacker’s true IP is only visible in events <em>before</em> the first AssumeRole pivot. After that, the source becomes an AWS internal endpoint.
         </div>
       </div>
 
@@ -428,6 +349,156 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
           </div>
         )}
       </div>
+
+      {/* Main 2-col layout: log viewer + attribution */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+
+        {/* Log viewer */}
+        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '560px' }}>
+          <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--color-border)', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <Search size={14} style={{ color: 'var(--color-text-dim)', flexShrink: 0 }} />
+            <input
+              className="input"
+              style={{ border: 'none', background: 'transparent', padding: 0, fontFamily: 'JetBrains Mono, monospace' }}
+              placeholder="Search by IP, Event Name, API Key, Role ARN..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <span className="text-xs font-mono" style={{ color: 'var(--color-text-dim)', flexShrink: 0 }}>
+              {filtered.length}/{logsData.length}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '130px 160px 1fr 150px', padding: '0.35rem 1rem', borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg)' }}>
+            {['Time (UTC)', 'Event', 'Source IP', 'Identity Type'].map(h => (
+              <div key={h} className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-dim)' }}>{h}</div>
+            ))}
+          </div>
+
+          <div style={{ overflowY: 'auto', flex: 1 }}>
+            {filtered.map(log => {
+              const isExp = expanded === log.id;
+              const color = EVENT_COLOR[log.eventName] || '#94a3b8';
+              return (
+                <div key={log.id} className="log-row" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <div
+                    style={{ display: 'grid', gridTemplateColumns: '130px 160px 1fr 150px', padding: '0.55rem 1rem', cursor: 'pointer' }}
+                    onClick={() => setExpanded(isExp ? null : log.id)}
+                  >
+                    <div className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {log.eventTime.split('T')[1].replace('Z', '')}
+                    </div>
+                    <div className="font-mono text-xs font-medium" style={{ color }}>{log.eventName}</div>
+                    <div className="font-mono text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{log.sourceIPAddress}</div>
+                    <div className="font-mono text-xs truncate" style={{ color: 'var(--color-text-dim)' }}>{log.userIdentity?.type}</div>
+                  </div>
+                  {isExp && (
+                    <div style={{ padding: '0 1rem 0.75rem', background: 'var(--color-bg)' }}>
+                      <pre className="font-mono text-xs p-3 rounded overflow-auto" style={{
+                        background: '#060910', border: '1px solid var(--color-border)',
+                        color: '#e0e7ff', maxHeight: 240,
+                      }}>
+                        {JSON.stringify(log, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Attribution panel & Anti-Forensics callout */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Anti-Forensics callout */}
+          <div className="card" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Shield size={13} style={{ color: '#ef4444' }} />
+              <span className="text-xs font-semibold" style={{ color: '#fca5a5' }}>Anti-Forensics Detected: Role Chaining (Lec 5 §7.4)</span>
+            </div>
+            <div className="text-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+              The attacker used <span style={{ color: '#fca5a5' }}>AssumeRole</span> as an anti-forensic technique — similar to how HTTPS hides payload contents from network inspection,{' '}
+              role chaining hides the caller’s true IP address. After each pivot, the <code style={{ color: '#86efac' }}>sourceIPAddress</code> field changes to an AWS internal endpoint.{' '}
+              The counter-technique: trace the <code style={{ color: '#86efac' }}>sessionContext.sessionIssuer</code> chain backwards to the original permanent credential.
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={15} style={{ color: '#ef4444' }} />
+                <span className="font-semibold text-sm">Root Cause Attribution</span>
+              </div>
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
+                onClick={handleUseHint}
+                disabled={hintsUsed >= 3}
+                title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
+              >
+                <HelpCircle size={12} /> Hint ({3 - hintsUsed})
+              </button>
+            </div>
+
+            {/* Correlative Analysis note */}
+            <div className="p-2 rounded mb-3 text-xs" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', color: '#c7d2fe', lineHeight: 1.6 }}>
+              <strong style={{ display: 'block', marginBottom: '0.2rem' }}>Correlative Analysis (Lec 13)</strong>
+              CloudTrail is <em>external</em> to the compromised instance — it cannot be tampered with from within the VM. This makes it more trustworthy than the instance’s own logs, which a rootkit could have modified.
+              <br /><br />
+              <strong style={{ display: 'block', marginBottom: '0.2rem' }}>☁️ Cloud Log Completeness (Lec 26)</strong>
+              Cloud environments separate management logs from data-plane logs. If data events (like S3 object reads/writes) aren't explicitly enabled, your forensic timeline will have critical gaps.
+            </div>
+
+            <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+              Do NOT submit intermediate pivot IPs or temporary tokens. Find the original AKIA credential and the true external attacker IP.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  True Attacker Source IP
+                </label>
+                <input className="input" placeholder="Not the AWS endpoint..." value={submitIp} onChange={e => setSubmitIp(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Execution Role ARN
+                </label>
+                <input className="input font-mono text-xs" placeholder="arn:aws:iam::..." value={submitRole} onChange={e => setSubmitRole(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Root Compromised IAM Key ID
+                </label>
+                <input className="input font-mono text-xs" placeholder="AKIA..." value={submitKey} onChange={e => setSubmitKey(e.target.value)} />
+              </div>
+            </div>
+
+            <button
+              className="btn btn-primary mt-5 w-full justify-center"
+              onClick={handleSubmit}
+              disabled={!submitIp || !submitKey || !submitRole}
+            >
+              <Send size={14} /> Submit Final Report
+            </button>
+          </div>
+
+          {/* Quick reference */}
+          <div className="card" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)' }}>
+            <div className="text-xs font-semibold mb-2" style={{ color: '#a5b4fc' }}>📚 IAM Key Prefixes</div>
+            <div className="space-y-1.5 font-mono text-xs" style={{ color: 'var(--color-text-dim)' }}>
+              <div><span style={{ color: '#22c55e' }}>AKIA...</span> — Permanent long-term key</div>
+              <div><span style={{ color: '#f59e0b' }}>ASIA...</span> — Temporary session token</div>
+              <div><span style={{ color: '#64748b' }}>AROA...</span> — Role assumed principal</div>
+            </div>
+            <div className="text-xs mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)', color: 'var(--color-text-dim)' }}>
+              sessionContext.sessionIssuer shows the role ARN that generated a temporary token.
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       {/* Wrong submission modal */}
       {wrongModal && (

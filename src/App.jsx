@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useReducer, useState, useEffect, useRef } from 'react';
 import './index.css';
 import { gameReducer, INITIAL_STATE, PHASES } from './gameState';
 import TutorialModal from './components/TutorialModal';
@@ -6,16 +6,33 @@ import ScoreHUD from './components/ScoreHUD';
 import LegendPanel from './components/LegendPanel';
 import EvidenceLocker from './components/EvidenceLocker';
 import { ToastContainer, useToasts } from './components/ToastNotification';
+import PhaseIntroModal from './components/PhaseIntroModal';
 import Phase1Triage from './phases/Phase1Triage';
 import Phase2Buckets from './phases/Phase2Buckets';
 import Phase3Logs from './phases/Phase3Logs';
 import DebriefScreen from './components/DebriefScreen';
+
+// Phases that get an intro modal
+const INTRO_PHASES = [PHASES.PHASE1, PHASES.PHASE2, PHASES.PHASE3];
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
   const [showLegend, setShowLegend] = useState(false);
   const [showLocker, setShowLocker] = useState(false);
   const { toasts, addToast, removeToast } = useToasts();
+
+  // Track which phase intros have been dismissed
+  const [dismissedIntros, setDismissedIntros] = useState(new Set());
+  const prevPhase = useRef(state.phase);
+
+  // Show intro whenever the phase changes to a phase that has an intro
+  const showIntro =
+    INTRO_PHASES.includes(state.phase) &&
+    !dismissedIntros.has(state.phase);
+
+  const handleBeginPhase = () => {
+    setDismissedIntros(prev => new Set([...prev, state.phase]));
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -39,6 +56,11 @@ export default function App() {
       {showLocker && <EvidenceLocker state={state} onClose={() => setShowLocker(false)} />}
 
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      {/* Phase intro modal — appears before the player can interact */}
+      {showIntro && (
+        <PhaseIntroModal phase={state.phase} onBegin={handleBeginPhase} />
+      )}
 
       <main style={{
         paddingBottom: '3rem',

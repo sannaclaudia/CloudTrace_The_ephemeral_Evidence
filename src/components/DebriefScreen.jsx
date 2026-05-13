@@ -27,6 +27,12 @@ const LESSONS = [
     lesson: 'Advanced threat actors rarely use stolen permanent credentials (AKIA...) directly for malicious actions. They pivot using STS AssumeRole to generate temporary session tokens (ASIA...). The resulting malicious API calls (like RunInstances) will show an internal AWS service endpoint as the source IP. Investigators must trace the sessionContext backwards to the originating AssumeRole event to find the true attacker IP and root compromised credential.',
     ref: 'CISA Cloud Security Technical Reference Architecture §6.1 — Logging and Monitoring',
   },
+  {
+    phase: 'Master\'s Concept — Cloud Forensics Peculiarities',
+    icon: '☁️',
+    lesson: 'Cloud environments break traditional physical-seizure assumptions. Investigators must deal with multi-tenancy (preventing physical access), ephemeral resources (auto-terminating VMs), and heavy provider dependency. Cloud logs can have critical completeness gaps if data-plane events aren\'t configured, and sanitization operations (like crypto-erase) can permanently destroy evidence unless WORM-like retention is used.',
+    ref: 'Lecture 26 (Cloud Forensics Peculiarities) — Multi-tenancy, IaaS Evidence, WORM Storage',
+  },
 ];
 
 export default function DebriefScreen({ state, dispatch }) {
@@ -95,6 +101,35 @@ export default function DebriefScreen({ state, dispatch }) {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="card mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Target size={16} style={{ color: 'var(--color-primary)' }} />
+          <span className="font-semibold">Chain of Custody &amp; Evidence Integrity Report</span>
+        </div>
+        <div className="space-y-3 font-mono text-xs" style={{ background: '#0a0d14', padding: '1rem', borderRadius: 6, border: '1px solid var(--color-border)' }}>
+          <div>
+            <div style={{ color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>[PHASE 1] Volatile RAM Image Hash (SHA-256):</div>
+            <div style={{ color: state.snapshotTaken ? '#86efac' : '#ef4444', wordBreak: 'break-all' }}>
+              {state.snapshotTaken ? 'sha256:4d8123a105f63... (Snapshot acquired safely)' : 'N/A — Evidence destroyed or not acquired'}
+            </div>
+          </div>
+          <div style={{ height: 1, background: 'var(--color-border)' }} />
+          <div>
+            <div style={{ color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>[PHASE 2] S3 Bucket Copy Integrity Hash (SHA-256):</div>
+            <div style={{ color: state.phase2Correct ? '#86efac' : '#ef4444', wordBreak: 'break-all' }}>
+              {state.phase2Correct ? 'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1' : 'N/A — Primary copy not correctly acquired'}
+            </div>
+          </div>
+          <div style={{ height: 1, background: 'var(--color-border)' }} />
+          <div>
+            <div style={{ color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>[SANITIZATION WARNING] Data Preservation Status:</div>
+            <div style={{ color: state.phase2Correct ? '#86efac' : '#f59e0b' }}>
+              {state.phase2Correct ? 'Evidence secured before lifecycle deletion policy triggered.' : 'Warning: Unsecured data is at risk of Purge-level sanitization via crypto-erase.'}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card mb-6">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Info } from 'lucide-react';
+import { CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
 
 /**
  * Toast notification system.
@@ -26,7 +26,7 @@ function Toast({ id, type, title, message, onRemove }) {
     return () => clearTimeout(timer);
   }, [id, type, onRemove]);
 
-  const Icon = type === 'success' ? CheckCircle : type === 'error' ? XCircle : Info;
+  const Icon = type === 'success' ? CheckCircle : type === 'error' ? XCircle : type === 'warning' ? AlertTriangle : Info;
 
   return (
     <div className={`toast toast-${type}`} onClick={() => onRemove(id)} style={{ cursor: 'pointer' }}>

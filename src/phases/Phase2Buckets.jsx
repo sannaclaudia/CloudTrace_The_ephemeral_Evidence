@@ -1,7 +1,21 @@
 import { useState, useMemo } from 'react';
-import { Database, Search, ChevronRight, ChevronDown, CheckCircle, ShieldAlert, Cpu } from 'lucide-react';
+import { Database, Search, ChevronRight, ChevronDown, CheckCircle, ShieldAlert, Cpu, AlertTriangle, Lock } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 import bucketsData from '../data/buckets.json';
+
+// SHA-256 simulated hashes for each bucket
+const BUCKET_HASHES = {
+  'bucket-primary':  'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
+  'bucket-replica1': 'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
+  'bucket-replica2': 'sha256:b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2',
+};
+
+// Simulated lifecycle policies — one bucket has a deletion policy set by attacker
+const LIFECYCLE_POLICIES = {
+  'bucket-primary':  { hasDeletion: false, policy: 'No expiration rules configured.' },
+  'bucket-replica1': { hasDeletion: true,  policy: 'DANGER: Expiration rule detected — objects with prefix "/" deleted after 1 day. Attacker-set lifecycle rule! Evidence at risk.' },
+  'bucket-replica2': { hasDeletion: false, policy: 'No expiration rules configured.' },
+};
 
 export default function Phase2Buckets({ state, dispatch, addToast }) {
   const [expanded, setExpanded] = useState(null);
@@ -9,6 +23,8 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   const [integrityRunning, setIntegrityRunning] = useState(false);
   const [integrityDone, setIntegrityDone] = useState({});
   const [wrongModal, setWrongModal] = useState(false);
+  const [lifecycleChecked, setLifecycleChecked] = useState({});
+  const [lifecycleRunning, setLifecycleRunning] = useState(false);
 
   const handleSelect = (id) => {
     if (state.phase2Correct) return;
@@ -16,6 +32,15 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   };
 
   const handleConfirm = () => {
+    if (!integrityDone[state.selectedBucketId]) {
+      addToast({ type: 'warning', title: 'Forensic Error', message: 'You must compute the SHA-256 hash to prove evidence integrity before confirming.' });
+      return;
+    }
+    if (!lifecycleChecked[state.selectedBucketId]) {
+      addToast({ type: 'warning', title: 'Forensic Error', message: 'You must verify the lifecycle policy to ensure evidence is not scheduled for deletion.' });
+      return;
+    }
+
     const selected = bucketsData.find(b => b.id === state.selectedBucketId);
     if (!selected.isPrimary) {
       dispatch({ type: ACTIONS.PHASE2_CONFIRM, payload: { buckets: bucketsData } });
@@ -28,11 +53,28 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   const runIntegrityCheck = (bucketId) => {
     if (integrityRunning || integrityDone[bucketId]) return;
     setIntegrityRunning(true);
+    handleSelect(bucketId);
     setTimeout(() => {
       setIntegrityDone(prev => ({ ...prev, [bucketId]: true }));
       setIntegrityRunning(false);
-      addToast({ type: 'info', title: 'Integrity Check Complete', message: `Computed hash for bucket root metadata.` });
+      addToast({ type: 'info', title: 'SHA-256 Integrity Check Complete', message: 'Hash computed. Compare source and working-copy hashes to verify admissibility.' });
     }, 1500);
+  };
+
+  const runLifecycleCheck = (bucketId) => {
+    if (lifecycleRunning || lifecycleChecked[bucketId]) return;
+    setLifecycleRunning(true);
+    handleSelect(bucketId);
+    setTimeout(() => {
+      const policy = LIFECYCLE_POLICIES[bucketId];
+      setLifecycleChecked(prev => ({ ...prev, [bucketId]: policy }));
+      setLifecycleRunning(false);
+      if (policy.hasDeletion) {
+        addToast({ type: 'error', title: '⚠ Lifecycle Deletion Policy Detected!', message: 'Evidence destruction scheduled. Crypto-erase risk — capture immediately.' });
+      } else {
+        addToast({ type: 'success', title: 'Lifecycle Check Clean', message: 'No scheduled deletion or crypto-erase policy found.' });
+      }
+    }, 1200);
   };
 
   return (
@@ -99,14 +141,37 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
                    disabled={integrityRunning || integrityDone[bucket.id]}
                 >
                    {integrityRunning && state.selectedBucketId === bucket.id ? <Cpu size={14} className="animate-spin" /> : <ShieldAlert size={14} />}
-                   {integrityDone[bucket.id] ? 'Integrity Hash Verified' : 'Run Integrity Check'}
+                   {integrityDone[bucket.id] ? 'SHA-256 Hash Verified' : 'Run SHA-256 Integrity Check'}
+                </button>
+
+                <button
+                  className={`btn ${lifecycleChecked[bucket.id] ? 'btn-ghost' : ''}`}
+                  style={{ width: '100%', fontSize: '0.75rem', borderColor: lifecycleChecked[bucket.id] ? (lifecycleChecked[bucket.id].hasDeletion ? '#ef4444' : 'var(--color-border)') : '#f59e0b', color: lifecycleChecked[bucket.id]?.hasDeletion ? '#fca5a5' : undefined }}
+                  onClick={(e) => { e.stopPropagation(); runLifecycleCheck(bucket.id); }}
+                  disabled={lifecycleRunning || !!lifecycleChecked[bucket.id]}
+                >
+                  {lifecycleRunning ? <Cpu size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
+                  {lifecycleChecked[bucket.id] ? (lifecycleChecked[bucket.id].hasDeletion ? '⚠ Deletion Policy Found!' : 'No Lifecycle Risk') : 'Check Lifecycle Policy'}
                 </button>
               </div>
 
-              {/* Integrity status (Trap for students) */}
+              {/* SHA-256 integrity hash output */}
               {integrityDone[bucket.id] && (
-                <div className="mt-3 p-2 rounded text-xs font-mono" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', wordBreak: 'break-all' }}>
-                  {bucket.integrityHash}
+                <div className="mt-3 p-2 rounded text-xs" style={{ background: '#060910', border: '1px solid var(--color-border)', fontFamily: 'monospace' }}>
+                  <div style={{ color: 'var(--color-text-dim)', marginBottom: '0.3rem', fontSize: '0.65rem' }}>$ sha256sum bucket-manifest.json</div>
+                  <div style={{ color: '#86efac', wordBreak: 'break-all' }}>{BUCKET_HASHES[bucket.id]}</div>
+                  <div style={{ color: 'var(--color-text-dim)', marginTop: '0.4rem', fontSize: '0.65rem' }}>SHA-256 preferred over MD5 — collision resistance required for court admissibility (Lec 5)</div>
+                </div>
+              )}
+              {/* Lifecycle policy result */}
+              {lifecycleChecked[bucket.id] && (
+                <div className="mt-2 p-2 rounded text-xs" style={{
+                  background: lifecycleChecked[bucket.id].hasDeletion ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.06)',
+                  border: `1px solid ${lifecycleChecked[bucket.id].hasDeletion ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.2)'}`,
+                  color: lifecycleChecked[bucket.id].hasDeletion ? '#fca5a5' : '#86efac',
+                  lineHeight: 1.6,
+                }}>
+                  {lifecycleChecked[bucket.id].policy}
                 </div>
               )}
             </div>
@@ -219,6 +284,23 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
         >
           <CheckCircle size={16} /> Confirm Primary Copy Selection
         </button>
+      </div>
+
+      {/* Data Sanitization Awareness Card */}
+      <div className="mt-6 p-4 rounded-lg" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.25)' }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Lock size={14} style={{ color: '#f59e0b' }} />
+          <span className="text-xs font-semibold" style={{ color: '#fbbf24' }}>Evidence Preservation — Data Sanitization Awareness (Lec 22)</span>
+        </div>
+        <div className="text-xs" style={{ color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
+          In cloud environments, data can be silently destroyed through{' '}
+          <span style={{ color: '#fbbf24' }}>crypto-erase</span> (deleting the KMS encryption key makes S3 objects permanently unrecoverable — even from replicas) or{' '}
+          <span style={{ color: '#fbbf24' }}>lifecycle deletion policies</span> (scheduled object expiration).
+          Use the <em>"Check Lifecycle Policy"</em> button on each bucket before confirming your selection.{' '}
+          NIST defines three sanitization levels: <strong style={{ color: '#e2e8f0' }}>Clear</strong>, <strong style={{ color: '#e2e8f0' }}>Purge</strong> (crypto-erase), and <strong style={{ color: '#e2e8f0' }}>Destroy</strong>.
+          <br /><br />
+          <span style={{ color: '#a5b4fc', fontWeight: 'bold' }}>☁️ Cloud Mitigation (Lecture 26):</span> To prevent evidence tampering, cloud providers offer <strong style={{ color: '#e2e8f0' }}>WORM-like retention</strong> (Write Once, Read Many). Features like S3 Object Lock prevent even the root account owner from deleting or overwriting the evidence during the investigation window.
+        </div>
       </div>
 
       {wrongModal && (

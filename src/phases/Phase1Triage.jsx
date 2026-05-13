@@ -53,9 +53,13 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   const [actionUsed, setActionUsed] = useState({ pause: false, ebs: false, flowlogs: false, poweroff: false });
   const [selectedPids, setSelectedPids] = useState(new Set());
   const [processResult, setProcessResult] = useState(null);
-  const [showHint, setShowHint] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
   const hintsUsed = state.hintsUsed?.p1 || 0;
+
+  const handleUseHint = () => {
+    if (hintsUsed >= 3) return;
+    dispatch({ type: ACTIONS.USE_HINT, payload: { phase: 'p1' } });
+    addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Unlocked`, message: '−5 Admissibility Score' });
+  };
 
   const triggerWrongAction = (actionType, title, body, lesson, severity = 'warning') => {
     setWrongActionModal({ icon: '⚠️', title, body, lesson, severity });
@@ -145,15 +149,6 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
       dispatch({ type: ACTIONS.PROCESS_ANALYSIS_WRONG, payload: { penalty, note } });
     }
   };
-
-  const handleUseHint = () => {
-    if (hintsUsed >= 3) return;
-    dispatch({ type: ACTIONS.USE_HINT, payload: { phase: 'p1' } });
-    setHintIndex(hintsUsed);
-    setShowHint(true);
-    addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Used`, message: '−5 Admissibility' });
-  };
-
   const confirmSnapshotSuccess = () => {
     setShowSnapshotSuccess(false);
     dispatch({ type: ACTIONS.PHASE1_COMPLETE });
@@ -274,6 +269,60 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
             </div>
           </div>
 
+          {/* STEP 1: Cloud Incident Responder Console */}
+          <div className="card">
+            <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              Step 1 — Cloud Incident Responder Console
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+              {CONSOLE_ACTIONS.map(a => (
+                <button
+                  key={a.id}
+                  className="btn btn-ghost"
+                  style={{
+                    justifyContent: 'flex-start', padding: '0.75rem',
+                    flexDirection: 'column', alignItems: 'flex-start', height: 'auto',
+                    opacity: a.used ? 0.35 : 1,
+                    ...(a.active ? { background: 'rgba(34,197,94,0.1)', borderColor: '#22c55e', color: '#86efac' } : {}),
+                  }}
+                  onClick={a.onClick || undefined}
+                  disabled={a.disabled}
+                  data-tooltip={a.tooltip}
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    {a.icon}
+                    <span className="font-semibold text-sm">{a.label}</span>
+                    {a.used && <span className="badge badge-danger" style={{ fontSize: '0.6rem' }}>VIOLATION</span>}
+                    {a.active && <span className="badge badge-success" style={{ fontSize: '0.6rem' }}>DONE</span>}
+                  </div>
+                  <span className="text-xs opacity-60 text-left">{a.sub}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Procedural checklist */}
+            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+              {[
+                { label: 'Modify ENI Boundaries', done: state.networkIsolated },
+                { label: 'Identify Malicious Processes', done: state.processesIdentified },
+                { label: 'Verify Instance State', done: state.stateVerified },
+                { label: 'Acquire Memory Snapshot', done: state.snapshotTaken },
+              ].map(({ label, done }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: done ? 'rgba(34,197,94,0.2)' : 'var(--color-bg)',
+                    border: `2px solid ${done ? '#22c55e' : 'var(--color-border)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    {done && <span style={{ color: '#22c55e', fontSize: '0.55rem' }}>✓</span>}
+                  </div>
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-wider" style={{ color: done ? '#86efac' : 'var(--color-text-dim)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* STEP 2: Process Tree Investigation (unlocked after isolation) */}
           {state.networkIsolated && !state.processesIdentified && (
             <div className="card" style={{ border: '1px solid rgba(99,102,241,0.5)' }}>
@@ -297,9 +346,18 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
                 Network isolated. Before acquiring memory, identify the malicious processes to establish the acquisition scope. Select all suspicious entries in the process list — then submit your analysis.
               </p>
 
-              {showHint && (
-                <div className="p-2 rounded mb-3 text-xs" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.3)', color: '#c7d2fe' }}>
-                  <strong>Hint {hintIndex + 1}:</strong> {HINTS[hintIndex]}
+              {/* Guidance & Hints (Visible when requested) */}
+              {hintsUsed > 0 && (
+                <div className="p-4 rounded-lg mb-4 text-sm" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.3)' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <HelpCircle size={16} style={{ color: '#a5b4fc' }} />
+                    <span className="font-semibold" style={{ color: '#c7d2fe' }}>Investigation Guidance & Hints</span>
+                  </div>
+                  <ul className="space-y-2 list-disc list-inside" style={{ color: '#e0e7ff', lineHeight: 1.6 }}>
+                    {HINTS.slice(0, hintsUsed).map((hint, i) => (
+                      <li key={i}><span style={{ color: '#a5b4fc', fontWeight: 'bold' }}>Hint {i + 1}:</span> {hint}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
@@ -430,77 +488,66 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
           )}
         </div>
 
-        {/* ── RIGHT COLUMN: Console ── */}
+        {/* ── RIGHT COLUMN: Principles ── */}
         <div style={{ position: 'sticky', top: '68px' }}>
-          <div className="card">
-            <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-muted)' }}>
-              Cloud Incident Responder Console
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {CONSOLE_ACTIONS.map(a => (
-                <button
-                  key={a.id}
-                  className="btn btn-ghost"
-                  style={{
-                    justifyContent: 'flex-start', padding: '0.75rem 1rem',
-                    flexDirection: 'column', alignItems: 'flex-start', height: 'auto',
-                    opacity: a.used ? 0.35 : 1,
-                    ...(a.active ? { background: 'rgba(34,197,94,0.1)', borderColor: '#22c55e', color: '#86efac' } : {}),
-                  }}
-                  onClick={a.onClick || undefined}
-                  disabled={a.disabled}
-                  data-tooltip={a.tooltip}
-                >
-                  <div className="flex items-center gap-2 mb-0.5">
-                    {a.icon}
-                    <span className="font-semibold text-sm">{a.label}</span>
-                    {a.used && <span className="badge badge-danger" style={{ fontSize: '0.6rem' }}>VIOLATION</span>}
-                    {a.active && <span className="badge badge-success" style={{ fontSize: '0.6rem' }}>DONE</span>}
-                  </div>
-                  <span className="text-xs opacity-60 text-left">{a.sub}</span>
-                </button>
-              ))}
-            </div>
 
-            {/* Procedural checklist */}
-            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-              <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>
-                Procedure Checklist
-              </div>
-              {[
-                { label: 'Modify ENI Boundaries', done: state.networkIsolated },
-                { label: 'Identify Malicious Processes', done: state.processesIdentified },
-                { label: 'Verify Instance State', done: state.stateVerified },
-                { label: 'Acquire Memory Snapshot', done: state.snapshotTaken },
-              ].map(({ label, done }) => (
-                <div key={label} className="flex items-center gap-2 mb-1.5">
-                  <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    background: done ? 'rgba(34,197,94,0.2)' : 'var(--color-bg)',
-                    border: `2px solid ${done ? '#22c55e' : 'var(--color-border)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    {done && <span style={{ color: '#22c55e', fontSize: '0.55rem' }}>✓</span>}
-                  </div>
-                  <span className="text-xs" style={{ color: done ? '#86efac' : 'var(--color-text-dim)' }}>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Reference card */}
+          {/* Forensic Principles card */}
           <div className="card mt-3" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.2)' }}>
-            <div className="text-xs font-semibold mb-2" style={{ color: '#a5b4fc' }}>📚 Order of Volatility</div>
-            <div className="text-xs space-y-1" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
-              <div>1. CPU registers &amp; cache</div>
-              <div>2. RAM (active processes, network state)</div>
-              <div>3. Virtual memory / swap</div>
-              <div>4. Network connections</div>
-              <div>5. Running processes</div>
-              <div style={{ color: '#475569' }}>6. Disk (non-volatile)</div>
-              <div style={{ color: '#475569' }}>7. Remote logging / cloud audit</div>
+            <div className="text-xs font-semibold mb-3" style={{ color: '#a5b4fc' }}>📚 Forensic Principles — Phase 1</div>
+
+            {/* Order of Volatility */}
+            <div className="mb-3">
+              <div className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>⚡ Order of Volatility (NIST SP 800-86)</div>
+              <div className="text-xs space-y-0.5" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
+                <div><span style={{ color: '#ef4444' }}>1.</span> CPU registers &amp; cache</div>
+                <div><span style={{ color: '#ef4444' }}>2.</span> RAM — processes, net sockets, keys</div>
+                <div><span style={{ color: '#f59e0b' }}>3.</span> Virtual memory / swap</div>
+                <div><span style={{ color: '#f59e0b' }}>4.</span> Network connections</div>
+                <div style={{ color: '#475569' }}>5. Running processes</div>
+                <div style={{ color: '#475569' }}>6. Disk (non-volatile)</div>
+                <div style={{ color: '#475569' }}>7. Remote logs / cloud audit</div>
+              </div>
             </div>
-            <div className="text-xs mt-2" style={{ color: '#475569' }}>Ref: NIST SP 800-86 §4.2</div>
+
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '0.5rem 0' }} />
+
+            {/* Forensic Uncertainty */}
+            <div className="mb-2">
+              <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>🔬 Forensic Uncertainty</div>
+              <div className="text-xs" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
+                Any action on the system perturbs it. Reading a file changes its last-accessed timestamp. Acquire a copy — never work on the original.
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '0.5rem 0' }} />
+
+            {/* IaaS Constraints */}
+            <div className="mb-1">
+              <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>☁️ IaaS Multi-tenancy (Lecture 26)</div>
+              <div className="text-xs" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
+                The physical server is shared with other tenants. Physical seizure is impossible, meaning we must rely exclusively on logical extraction via provider APIs.
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '0.5rem 0' }} />
+
+            {/* Trusted Tools */}
+            <div className="mb-2">
+              <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>🛡️ Trusted Tool Principle</div>
+              <div className="text-xs" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
+                We use the <span style={{ color: '#a5b4fc' }}>CSP API</span> (not the instance&apos;s own binaries) because a compromised host&apos;s tools may return manipulated output — rootkits can fake <code style={{ color: '#86efac' }}>ps</code>, <code style={{ color: '#86efac' }}>ls</code>, <code style={{ color: '#86efac' }}>netstat</code>.
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: 'var(--color-border)', margin: '0.5rem 0' }} />
+
+            {/* Isolation = Faraday */}
+            <div>
+              <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--color-text-muted)' }}>🔒 Isolation = Faraday Cage</div>
+              <div className="text-xs" style={{ color: 'var(--color-text-dim)', lineHeight: 1.6 }}>
+                Network isolation (modifying the Security Group) is the cloud equivalent of a Faraday bag — it blocks remote wipe commands and severs the exfiltration channel.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -545,6 +592,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
               }
               <div style={{ color: '#86efac' }}>✓ CreateSnapshot API call successful</div>
               <div style={{ color: '#86efac' }}>✓ 32 GB logical memory block captured</div>
+              <div style={{ color: '#a5b4fc' }}>→ Data carving will recover deleted artefacts from unallocated memory pages</div>
               <div style={{ color: '#86efac' }}>✓ Snapshot ID: snap-0abc1234def56789a</div>
             </div>
             <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>
