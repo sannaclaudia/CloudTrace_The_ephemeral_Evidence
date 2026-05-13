@@ -13,6 +13,9 @@ export const INITIAL_STATE = {
   phase: PHASES.MAIN_MENU,
   admissibilityScore: 100,
   actions: [],
+  gameMode: 'Guided', // 'Guided', 'Challenge', 'Final Exam'
+  timerMode: 'Story', // 'Story', 'Relaxed', 'Fast Run'
+  timeLeft: 0, // seconds
 
   // Phase 1 state
   networkIsolated: false,
@@ -56,6 +59,8 @@ export const ACTIONS = {
   VERIFY_STATE: 'VERIFY_STATE',
   TAKE_SNAPSHOT: 'TAKE_SNAPSHOT',
   TIMER_EXPIRED: 'TIMER_EXPIRED',
+  TICK_TIMER: 'TICK_TIMER',                       // NEW
+  TIMER_PENALTY: 'TIMER_PENALTY',                 // NEW
   PHASE1_COMPLETE: 'PHASE1_COMPLETE',
   IDENTIFY_PROCESSES: 'IDENTIFY_PROCESSES',       // NEW
   PROCESS_ANALYSIS_WRONG: 'PROCESS_ANALYSIS_WRONG', // NEW
@@ -90,8 +95,22 @@ export function gameReducer(state, action) {
     case ACTIONS.LOAD_STATE:
       return { ...action.payload };
 
-    case ACTIONS.NEW_GAME:
-      return { ...INITIAL_STATE, phase: PHASES.PHASE1 };
+    case ACTIONS.NEW_GAME: {
+      const { gameMode = 'Guided', timerMode = 'Story' } = action.payload || {};
+      let startingTime = 0;
+      if (timerMode === 'Relaxed') startingTime = 45 * 60;
+      if (timerMode === 'Fast Run') startingTime = 30 * 60;
+      
+      const initialPhase = gameMode === 'Guided' ? PHASES.TUTORIAL : PHASES.PHASE1;
+      return { 
+        ...INITIAL_STATE, 
+        phase: initialPhase, 
+        previousPhase: PHASES.PHASE1,
+        gameMode, 
+        timerMode, 
+        timeLeft: startingTime 
+      };
+    }
 
     case ACTIONS.RESET_GAME:
       return { ...INITIAL_STATE, phase: PHASES.MAIN_MENU };
@@ -186,6 +205,24 @@ export function gameReducer(state, action) {
 
     case ACTIONS.PHASE1_COMPLETE:
       return { ...state, phase: PHASES.PHASE2 };
+
+    case ACTIONS.TICK_TIMER: {
+      if (state.timeLeft > 0) {
+        return { ...state, timeLeft: state.timeLeft - 1 };
+      }
+      return state;
+    }
+
+    case ACTIONS.TIMER_PENALTY: {
+      if (state.timeLeft <= 0 && state.timerMode !== 'Story' && !state.timerPenaltyApplied) {
+        const next = deductScore(state, 50);
+        return logAction(
+          { ...next, timerPenaltyApplied: true },
+          { phase: state.phase, action: 'Timer Expired', correct: false, note: 'Time ran out! Severe admissibility penalty applied (−50).' }
+        );
+      }
+      return state;
+    }
 
     case ACTIONS.TIMER_EXPIRED: {
       const next = deductScore(state, 30);

@@ -179,8 +179,21 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
           First, arrange the <strong>Attack Chain Nodes</strong> below in chronological order.
           Then, find the <strong>RunInstances</strong> event in the CloudTrail logs, trace the assumed roles backwards to find the compromised root credential, and submit your findings in the <strong>Attribution</strong> panel on the right.
         </p>
-
       </div>
+
+      {hintsUsed > 0 && (
+        <div className="card mb-4" style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.3)' }}>
+          <div className="flex items-center gap-2 mb-2" style={{ color: '#818cf8' }}>
+            <HelpCircle size={16} />
+            <span className="font-bold text-sm">Active Hints</span>
+          </div>
+          <ul className="text-sm space-y-2" style={{ color: 'var(--color-text)', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
+            {HINTS.slice(0, hintsUsed).map((hint, idx) => (
+              <li key={idx} dangerouslySetInnerHTML={{ __html: hint }} />
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* ── TIMELINE STRIP ── */}
       <div className="card mb-4" style={{ background: '#080c14', border: '1px solid var(--color-border)', padding: '0.85rem 1rem' }}>
@@ -283,11 +296,24 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
               : <span className="badge badge-primary">REQUIRED</span>
             }
           </div>
-          {!state.attackChainCompleted && (
-            <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }} onClick={handleChainReset}>
-              <RotateCcw size={12} /> Reset
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {state.gameMode === 'Guided' && (
+              <button
+                className="btn btn-ghost"
+                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
+                onClick={handleUseHint}
+                disabled={hintsUsed >= 3}
+                title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
+              >
+                <HelpCircle size={12} /> Hint ({3 - hintsUsed})
+              </button>
+            )}
+            {!state.attackChainCompleted && (
+              <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }} onClick={handleChainReset}>
+                <RotateCcw size={12} /> Reset
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
           Using your CloudTrail analysis, reconstruct the complete attack chain in chronological order. Click the event tiles in the correct sequence (1 → 6), then submit for validation.
@@ -421,15 +447,17 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
                 <AlertTriangle size={15} style={{ color: '#ef4444' }} />
                 <span className="font-semibold text-sm">Root Cause Attribution</span>
               </div>
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
-                onClick={handleUseHint}
-                disabled={hintsUsed >= 3}
-                title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
-              >
-                <HelpCircle size={12} /> Hint ({3 - hintsUsed})
-              </button>
+              {state.gameMode === 'Guided' && (
+                <button
+                  className="btn btn-ghost"
+                  style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
+                  onClick={handleUseHint}
+                  disabled={hintsUsed >= 3}
+                  title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
+                >
+                  <HelpCircle size={12} /> Hint ({3 - hintsUsed})
+                </button>
+              )}
             </div>
 
             {/* Correlative Analysis note */}

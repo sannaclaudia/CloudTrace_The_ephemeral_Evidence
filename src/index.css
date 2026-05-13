@@ -1,22 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 :root {
-  --color-bg: #0f1117;
-  --color-surface: #1a1d2e;
-  --color-surface-2: #242840;
-  --color-border: #2d3154;
-  --color-border-bright: #3d4470;
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f52c9;
-  --color-success: #22c55e;
+  --color-bg: #090c15;
+  --color-surface: #12182b;
+  --color-surface-2: #1e2640;
+  --color-border: #2c3859;
+  --color-border-bright: #3f507d;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #10b981;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
-  --color-text: #e2e8f0;
+  --color-text: #f1f5f9;
   --color-text-muted: #94a3b8;
   --color-text-dim: #64748b;
 }
+
+.font-serif { font-family: 'Playfair Display', serif !important; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 

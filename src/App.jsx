@@ -1,6 +1,6 @@
 import { useReducer, useState, useEffect } from 'react';
 import './index.css';
-import { gameReducer, INITIAL_STATE, PHASES } from './gameState';
+import { gameReducer, INITIAL_STATE, PHASES, ACTIONS } from './gameState';
 import TutorialModal from './components/TutorialModal';
 import ScoreHUD from './components/ScoreHUD';
 import LegendPanel from './components/LegendPanel';
@@ -42,6 +42,26 @@ export default function App() {
   const handleBeginPhase = () => {
     setDismissedIntros(prev => new Set([...prev, state.phase]));
   };
+
+  // Global Timer logic
+  useEffect(() => {
+    if (state.phase === PHASES.MAIN_MENU || state.phase === PHASES.DEBRIEF || state.phase === PHASES.TUTORIAL) return;
+    if (state.timerMode === 'Story') return;
+    if (showIntro) return; // pause timer while intro is showing
+
+    if (state.timeLeft <= 0 && !state.timerPenaltyApplied) {
+      dispatch({ type: ACTIONS.TIMER_PENALTY });
+      addToast({ type: 'error', title: 'Timer Expired', message: 'Time ran out! Severe admissibility penalty applied (−50).' });
+      return;
+    }
+
+    if (state.timeLeft > 0) {
+      const timer = setInterval(() => {
+        dispatch({ type: ACTIONS.TICK_TIMER });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [state.phase, state.timerMode, state.timeLeft, showIntro, state.timerPenaltyApplied, addToast]);
 
   if (isLoading) {
     return <LoadingScreen onComplete={() => setIsLoading(false)} />;

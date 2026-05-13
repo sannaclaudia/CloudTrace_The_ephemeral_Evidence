@@ -2,6 +2,8 @@ import { RotateCcw, CheckCircle, XCircle, Target, BookOpen } from 'lucide-react'
 import { ACTIONS } from '../gameState';
 
 const GRADE = (score) => {
+  if (score >= 125) return { letter: 'S+', label: 'Legendary Forensics Expert', color: '#8b5cf6' };
+  if (score >= 100) return { letter: 'S', label: 'Master Investigator', color: '#a855f7' };
   if (score >= 90) return { letter: 'A', label: 'Expert Investigator', color: '#22c55e' };
   if (score >= 75) return { letter: 'B', label: 'Proficient Analyst',  color: '#86efac' };
   if (score >= 55) return { letter: 'C', label: 'Adequate Response',   color: '#f59e0b' };
@@ -36,7 +38,9 @@ const LESSONS = [
 ];
 
 export default function DebriefScreen({ state, dispatch }) {
-  const grade = GRADE(state.admissibilityScore);
+  const multiplier = state.gameMode === 'Final Exam' ? 1.5 : state.gameMode === 'Challenge' ? 1.25 : 1.0;
+  const finalScore = Math.round(state.admissibilityScore * multiplier);
+  const grade = GRADE(finalScore);
   const won = !state.gameOver;
 
   return (
@@ -59,16 +63,19 @@ export default function DebriefScreen({ state, dispatch }) {
 
       <div className="card mb-6 text-center">
         <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>
-          Admissibility Score
+          Final Admissibility Score
         </div>
         <div className="text-7xl font-bold mb-1" style={{ color: grade.color, fontFamily: 'JetBrains Mono, monospace' }}>
-          {state.admissibilityScore}%
+          {finalScore}
+        </div>
+        <div className="text-sm mb-4" style={{ color: 'var(--color-text-dim)' }}>
+          Base Score: {state.admissibilityScore}% × {multiplier}x Multiplier ({state.gameMode})
         </div>
         <div className="text-lg mb-2" style={{ color: grade.color }}>
           Grade {grade.letter} — {grade.label}
         </div>
         <div className="progress-bar" style={{ maxWidth: 300, margin: '0 auto' }}>
-          <div className="progress-fill" style={{ width: `${state.admissibilityScore}%`, background: grade.color }} />
+          <div className="progress-fill" style={{ width: `${Math.min(100, finalScore)}%`, background: grade.color }} />
         </div>
       </div>
 

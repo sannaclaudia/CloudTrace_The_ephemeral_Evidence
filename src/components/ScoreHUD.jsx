@@ -1,4 +1,4 @@
-import { Shield, Info, Briefcase } from 'lucide-react';
+import { Shield, Info, Briefcase, Clock, Target } from 'lucide-react';
 import { PHASES } from '../gameState';
 
 const PHASE_LABELS = {
@@ -35,6 +35,15 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
     state?.attackChainCompleted,
     state?.phase3Correct,
   ].filter(Boolean).length;
+
+  const formatTime = (seconds) => {
+    if (seconds <= 0) return '00:00';
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const isUrgent = state?.timeLeft <= 300 && state?.timeLeft > 0;
 
   return (
     <header style={{
@@ -77,8 +86,28 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
         </div>
       )}
 
-      {/* Right: score + buttons */}
-      <div className="flex items-center gap-2">
+      {/* Right: score + modes + timer + buttons */}
+      <div className="flex items-center gap-4">
+        
+        {/* Game Mode */}
+        {state?.gameMode && (
+          <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+            <Target size={12} style={{ color: 'var(--color-primary)' }} />
+            <span className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>{state.gameMode}</span>
+          </div>
+        )}
+
+        {/* Timer */}
+        {state?.timerMode && state.timerMode !== 'Story' && (
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded ${isUrgent ? 'countdown-urgent' : ''}`} style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+            <Clock size={12} style={{ color: isUrgent ? '#ef4444' : 'var(--color-primary)' }} />
+            <span className="font-mono text-xs font-bold" style={{ color: isUrgent ? '#ef4444' : 'var(--color-text)' }}>
+              {formatTime(state.timeLeft)}
+            </span>
+          </div>
+        )}
+
+        {/* Score */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Admissibility:</span>
           <span className="font-mono font-bold text-sm" style={{ color: scoreColor }}>{admissibilityScore}%</span>

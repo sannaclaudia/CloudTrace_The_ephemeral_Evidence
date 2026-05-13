@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { Database, Search, ChevronRight, ChevronDown, CheckCircle, ShieldAlert, Cpu, AlertTriangle, Lock } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 import bucketsData from '../data/buckets.json';
+import { HelpCircle } from 'lucide-react';
+
+const HINTS = [
+  'A primary bucket is the original source. Replicas are copies. Look for the oldest LastModified timestamp.',
+  'True primary buckets do not have a ReplicationTimestamp.',
+  'Always verify the SHA-256 hash to ensure evidence hasn\'t been tampered with, and check the lifecycle policy to ensure evidence isn\'t scheduled for deletion.'
+];
 
 // SHA-256 simulated hashes for each bucket
 const BUCKET_HASHES = {
@@ -25,6 +32,13 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   const [wrongModal, setWrongModal] = useState(false);
   const [lifecycleChecked, setLifecycleChecked] = useState({});
   const [lifecycleRunning, setLifecycleRunning] = useState(false);
+  const hintsUsed = state.hintsUsed?.p2 || 0;
+
+  const handleUseHint = () => {
+    if (hintsUsed >= 3) return;
+    dispatch({ type: ACTIONS.USE_HINT, payload: { phase: 'p2' } });
+    addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Unlocked`, message: '−5 Admissibility' });
+  };
 
   const handleSelect = (id) => {
     if (state.phase2Correct) return;
@@ -79,14 +93,37 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
 
   return (
     <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)' }}>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold mb-0.5">Phase 2: Acquisition & Redundancy</h1>
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          The target S3 backup bucket is replicated across 3 regions. For legal admissibility, 
-          you must acquire data ONLY from the <strong>Primary Source</strong> exactly as it was written. 
-          Identify the original primary bucket based on forensic metadata.
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-xl font-bold mb-0.5">Phase 2: Acquisition & Redundancy</h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            The target S3 backup bucket is replicated across 3 regions. For legal admissibility, 
+            you must acquire data ONLY from the <strong>Primary Source</strong> exactly as it was written. 
+            Identify the original primary bucket based on forensic metadata.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+          {state.gameMode === 'Guided' && (
+            <button className="btn btn-ghost" onClick={handleUseHint} disabled={hintsUsed >= 3}>
+              <HelpCircle size={16} /> Request Hint ({3 - hintsUsed} left)
+            </button>
+          )}
+        </div>
       </div>
+
+      {hintsUsed > 0 && (
+        <div className="card mb-6" style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.3)' }}>
+          <div className="flex items-center gap-2 mb-2" style={{ color: '#818cf8' }}>
+            <HelpCircle size={16} />
+            <span className="font-bold text-sm">Active Hints</span>
+          </div>
+          <ul className="text-sm space-y-2" style={{ color: 'var(--color-text)', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
+            {HINTS.slice(0, hintsUsed).map((hint, idx) => (
+              <li key={idx} dangerouslySetInnerHTML={{ __html: hint }} />
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         {bucketsData.map(bucket => {

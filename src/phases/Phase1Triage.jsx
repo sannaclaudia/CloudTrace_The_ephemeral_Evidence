@@ -155,36 +155,6 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   };
 
   const CONSOLE_ACTIONS = [
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-xl font-bold mb-0.5">Phase 1: Containment & Triage</h1>
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Anomalous exfiltration detected on EC2 instance i-0abcd1234efgh5678. Take immediate forensic action.
-          </p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <button className="btn btn-ghost" onClick={handleUseHint} disabled={hintsUsed >= 3}>
-            <HelpCircle size={16} /> Request Hint ({3 - hintsUsed} left)
-          </button>
-        </div>
-      </div>
-
-      {hintsUsed > 0 && (
-        <div className="card mb-6" style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.3)' }}>
-          <div className="flex items-center gap-2 mb-2" style={{ color: '#818cf8' }}>
-            <Eye size={16} />
-            <span className="font-bold text-sm">Active Hints</span>
-          </div>
-          <ul className="text-sm space-y-2" style={{ color: 'var(--color-text)', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
-            {HINTS.slice(0, hintsUsed).map((hint, idx) => (
-              <li key={idx} dangerouslySetInnerHTML={{ __html: hint }} />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* VM Overview Card */}
-      <div className="grid gap-6 md:grid-cols-2 mb-6">
     {
       id: 'pause', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
       label: 'Evoke ACPI S3 (Sleep)', sub: 'Trigger hypervisor-level S3 sleep state',
@@ -233,9 +203,11 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
           <div className="flex items-center gap-2 justify-end mb-1">
             <span className="font-mono text-lg font-bold" style={{ color: '#ef4444' }}>Critical Priority</span>
           </div>
-          <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={handleUseHint} disabled={hintsUsed >= 3}>
-            <HelpCircle size={14} /> Request Hint ({3 - hintsUsed} left)
-          </button>
+          {state.gameMode === 'Guided' && (
+            <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={handleUseHint} disabled={hintsUsed >= 3}>
+              <HelpCircle size={14} /> Request Hint ({3 - hintsUsed} left)
+            </button>
+          )}
         </div>
       </div>
 
@@ -379,15 +351,17 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
                   <span className="font-semibold text-sm">Step 2 — Live Process Investigation</span>
                   <span className="badge badge-primary">REQUIRED</span>
                 </div>
-                <button
-                  className="btn btn-ghost"
-                  style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
-                  onClick={handleUseHint}
-                  disabled={hintsUsed >= 3}
-                  title={hintsUsed >= 3 ? 'No hints remaining' : `Use Hint (−5 Admissibility) — ${3 - hintsUsed} remaining`}
-                >
-                  <HelpCircle size={12} /> Hint ({3 - hintsUsed})
-                </button>
+                {state.gameMode === 'Guided' && (
+                  <button
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
+                    onClick={handleUseHint}
+                    disabled={hintsUsed >= 3}
+                    title={hintsUsed >= 3 ? 'No hints remaining' : `Use Hint (−5 Admissibility) — ${3 - hintsUsed} remaining`}
+                  >
+                    <HelpCircle size={12} /> Hint ({3 - hintsUsed})
+                  </button>
+                )}
               </div>
               <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
                 Network isolated. Before acquiring memory, identify the malicious processes to establish the acquisition scope. Select all suspicious entries in the process list — then submit your analysis.
