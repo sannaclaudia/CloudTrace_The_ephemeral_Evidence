@@ -38,6 +38,8 @@ export const INITIAL_STATE = {
   // Meta
   tutorialStep: 0,
   hintsUsed: {},                // NEW: { phaseKey: count }
+  dismissedIntros: [],          // array of phase strings
+  dismissedTours: [],           // array of phase strings
   gameOver: false,
   gameOverReason: '',
 };
@@ -78,6 +80,8 @@ export const ACTIONS = {
   // Meta
   USE_HINT: 'USE_HINT',                           // NEW
   RESET_GAME: 'RESET_GAME',
+  DISMISS_INTRO: 'DISMISS_INTRO',
+  DISMISS_TOUR: 'DISMISS_TOUR',
 };
 
 const logAction = (state, entry) => ({
@@ -118,6 +122,12 @@ export function gameReducer(state, action) {
 
     case ACTIONS.RESET_GAME:
       return { ...INITIAL_STATE, phase: PHASES.MAIN_MENU };
+
+    case ACTIONS.DISMISS_INTRO:
+      return { ...state, dismissedIntros: [...state.dismissedIntros, action.payload] };
+
+    case ACTIONS.DISMISS_TOUR:
+      return { ...state, dismissedTours: [...state.dismissedTours, action.payload] };
 
     case ACTIONS.SHOW_HOW_TO_PLAY:
       return { ...state, phase: PHASES.TUTORIAL, previousPhase: state.phase };

@@ -108,7 +108,7 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
         )}
 
         {/* Score */}
-        <div className="flex items-center gap-1.5">
+        <div id="score-hud" className="flex items-center gap-1.5">
           <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Admissibility:</span>
           <span className="font-mono font-bold text-sm" style={{ color: scoreColor }}>{admissibilityScore}%</span>
           <div style={{ width: 52, height: 4, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
@@ -118,6 +118,7 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
 
         {/* Evidence Locker button */}
         <button
+          id="evidence-locker-btn"
           className="btn btn-ghost"
           style={{
             padding: '0.25rem 0.5rem', position: 'relative',

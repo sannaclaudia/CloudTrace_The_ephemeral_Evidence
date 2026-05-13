@@ -172,13 +172,22 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
 
   return (
     <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)', display: 'flex', flexDirection: 'column' }}>
-      <div className="mb-4">
-        <h1 className="text-xl font-bold mb-0.5">Phase 3: Log Analysis & Attribution</h1>
-        <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-          You must reconstruct the attack sequence and attribute the breach to its true source.
-          First, arrange the <strong>Attack Chain Nodes</strong> below in chronological order.
-          Then, find the <strong>RunInstances</strong> event in the CloudTrail logs, trace the assumed roles backwards to find the compromised root credential, and submit your findings in the <strong>Attribution</strong> panel on the right.
-        </p>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-xl font-bold mb-0.5">Phase 3: Log Analysis & Attribution</h1>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+            You must reconstruct the attack sequence and attribute the breach to its true source.
+            First, arrange the <strong>Attack Chain Nodes</strong> below in chronological order.
+            Then, find the <strong>RunInstances</strong> event in the CloudTrail logs, trace the assumed roles backwards to find the compromised root credential, and submit your findings in the <strong>Attribution</strong> panel on the right.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+          {state.gameMode === 'Guided' && (
+            <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={handleUseHint} disabled={hintsUsed >= 3}>
+              <HelpCircle size={14} /> Request Hint ({3 - hintsUsed} left)
+            </button>
+          )}
+        </div>
       </div>
 
       {hintsUsed > 0 && (
@@ -297,17 +306,6 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
             }
           </div>
           <div className="flex items-center gap-2">
-            {state.gameMode === 'Guided' && (
-              <button
-                className="btn btn-ghost"
-                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
-                onClick={handleUseHint}
-                disabled={hintsUsed >= 3}
-                title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
-              >
-                <HelpCircle size={12} /> Hint ({3 - hintsUsed})
-              </button>
-            )}
             {!state.attackChainCompleted && (
               <button className="btn btn-ghost" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }} onClick={handleChainReset}>
                 <RotateCcw size={12} /> Reset
@@ -350,6 +348,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
         )}
 
         {/* Node tiles */}
+        <div id="attack-chain">
         {!state.attackChainCompleted && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', marginBottom: '1rem' }}>
             {SCRAMBLED.map(node => {
@@ -401,6 +400,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
             ))}
           </div>
         )}
+        </div>
 
         {/* Chain result feedback */}
         {chainResult === 'wrong' && (
@@ -441,23 +441,12 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
             </div>
           </div>
 
-          <div className="card">
+          <div id="attribution-panel" className="card">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={15} style={{ color: '#ef4444' }} />
                 <span className="font-semibold text-sm">Root Cause Attribution</span>
               </div>
-              {state.gameMode === 'Guided' && (
-                <button
-                  className="btn btn-ghost"
-                  style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: hintsUsed >= 3 ? 0.4 : 1 }}
-                  onClick={handleUseHint}
-                  disabled={hintsUsed >= 3}
-                  title={`Use Hint — ${3 - hintsUsed} remaining (−5 each)`}
-                >
-                  <HelpCircle size={12} /> Hint ({3 - hintsUsed})
-                </button>
-              )}
             </div>
 
             {/* Correlative Analysis note */}

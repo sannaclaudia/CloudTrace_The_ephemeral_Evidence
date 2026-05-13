@@ -93,7 +93,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
 
   return (
     <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)' }}>
-      <div className="flex justify-between items-start mb-6">
+      <div id="step2-intro" className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold mb-0.5">Phase 2: Acquisition & Redundancy</h1>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -125,7 +125,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div id="bucket-grid" className="grid gap-4 md:grid-cols-3 mb-6">
         {bucketsData.map(bucket => {
           const isSelected = state.selectedBucketId === bucket.id;
           const isExpanded = expanded === bucket.id;

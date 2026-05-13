@@ -233,7 +233,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
           {/* VM Status Card */}
-          <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
+          <div id="vm-overview" className="card" style={{ position: 'relative', overflow: 'hidden' }}>
             <div className="vm-scan-line" />
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
           </div>
 
           {/* STEP 1: Cloud Incident Responder Console */}
-          <div className="card">
+          <div id="action-console" className="card">
             <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-muted)' }}>
               Step 1 — Cloud Incident Responder Console
             </div>

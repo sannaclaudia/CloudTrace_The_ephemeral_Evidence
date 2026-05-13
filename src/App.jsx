@@ -13,6 +13,7 @@ import Phase3Logs from './phases/Phase3Logs';
 import DebriefScreen from './components/DebriefScreen';
 import MainMenu from './components/MainMenu';
 import LoadingScreen from './components/LoadingScreen';
+import GuidedTour from './components/GuidedTour';
 
 // Phases that get an intro modal
 const INTRO_PHASES = [PHASES.PHASE1, PHASES.PHASE2, PHASES.PHASE3];
@@ -24,9 +25,6 @@ export default function App() {
   const [showLocker, setShowLocker] = useState(false);
   const { toasts, addToast, removeToast } = useToasts();
 
-  // Track which phase intros have been dismissed
-  const [dismissedIntros, setDismissedIntros] = useState(new Set());
-  
   // Persist game state
   useEffect(() => {
     if (state.phase !== PHASES.MAIN_MENU) {
@@ -37,17 +35,27 @@ export default function App() {
   // Show intro whenever the phase changes to a phase that has an intro
   const showIntro =
     INTRO_PHASES.includes(state.phase) &&
-    !dismissedIntros.has(state.phase);
+    !state.dismissedIntros.includes(state.phase);
+    
+  const showTour = 
+    state.gameMode === 'Guided' &&
+    INTRO_PHASES.includes(state.phase) &&
+    state.dismissedIntros.includes(state.phase) &&
+    !state.dismissedTours.includes(state.phase);
 
   const handleBeginPhase = () => {
-    setDismissedIntros(prev => new Set([...prev, state.phase]));
+    dispatch({ type: ACTIONS.DISMISS_INTRO, payload: state.phase });
+  };
+  
+  const handleCompleteTour = () => {
+    dispatch({ type: ACTIONS.DISMISS_TOUR, payload: state.phase });
   };
 
   // Global Timer logic
   useEffect(() => {
     if (state.phase === PHASES.MAIN_MENU || state.phase === PHASES.DEBRIEF || state.phase === PHASES.TUTORIAL) return;
     if (state.timerMode === 'Story') return;
-    if (showIntro) return; // pause timer while intro is showing
+    if (showIntro || showTour) return; // pause timer while intro or tour is showing
 
     if (state.timeLeft <= 0 && !state.timerPenaltyApplied) {
       dispatch({ type: ACTIONS.TIMER_PENALTY });
@@ -61,7 +69,7 @@ export default function App() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [state.phase, state.timerMode, state.timeLeft, showIntro, state.timerPenaltyApplied, addToast]);
+  }, [state.phase, state.timerMode, state.timeLeft, showIntro, showTour, state.timerPenaltyApplied, addToast]);
 
   if (isLoading) {
     return <LoadingScreen onComplete={() => setIsLoading(false)} />;
@@ -97,6 +105,11 @@ export default function App() {
       {/* Phase intro modal — appears before the player can interact */}
       {showIntro && state.phase !== PHASES.MAIN_MENU && (
         <PhaseIntroModal phase={state.phase} onBegin={handleBeginPhase} />
+      )}
+      
+      {/* Guided Tour - appears after intro in Guided mode */}
+      {showTour && state.phase !== PHASES.MAIN_MENU && (
+        <GuidedTour phase={state.phase} onComplete={handleCompleteTour} />
       )}
 
       {state.phase !== PHASES.MAIN_MENU && (
