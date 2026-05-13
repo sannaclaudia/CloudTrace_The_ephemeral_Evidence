@@ -189,7 +189,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   ];
 
   return (
-    <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '2rem 2.5rem', minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
 
       {/* Header row */}
       <div className="flex items-center justify-between mb-5">

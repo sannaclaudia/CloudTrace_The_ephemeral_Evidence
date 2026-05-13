@@ -51,7 +51,7 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
       background: 'var(--color-surface)',
       borderBottom: '1px solid var(--color-border)',
       padding: '0 1.5rem',
-      height: '52px',
+      height: '64px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -59,9 +59,9 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
     }}>
       {/* Left: brand */}
       <div className="flex items-center gap-2">
-        <Shield size={18} style={{ color: 'var(--color-primary)' }} />
-        <span className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>CloudTrace</span>
-        <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>The Ephemeral Evidence</span>
+        <Shield size={24} style={{ color: 'var(--color-primary)' }} />
+        <span className="font-bold text-base" style={{ color: 'var(--color-text)' }}>CloudTrace</span>
+        <span className="text-sm" style={{ color: 'var(--color-text-dim)' }}>The Ephemeral Evidence</span>
       </div>
 
       {/* Center: phase stepper */}

@@ -92,7 +92,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
   };
 
   return (
-    <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)' }}>
+    <div style={{ padding: '2rem 2.5rem', minHeight: 'calc(100vh - 64px)' }}>
       <div id="step2-intro" className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold mb-0.5">Phase 2: Acquisition & Redundancy</h1>

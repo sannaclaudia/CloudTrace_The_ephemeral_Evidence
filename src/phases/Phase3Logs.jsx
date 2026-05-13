@@ -171,7 +171,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
   };
 
   return (
-    <div style={{ padding: '1.5rem 2rem', minHeight: 'calc(100vh - 52px)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '2rem 2.5rem', minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
       <div className="flex justify-between items-start mb-4">
         <div>
           <h1 className="text-xl font-bold mb-0.5">Phase 3: Log Analysis & Attribution</h1>
@@ -240,7 +240,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Log viewer */}
-          <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '400px' }}>
+          <div id="cloudtrail-logs" className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '400px' }}>
           <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--color-border)', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <Search size={14} style={{ color: 'var(--color-text-dim)', flexShrink: 0 }} />
             <input

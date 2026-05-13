@@ -90,6 +90,8 @@ export default function PhaseIntroModal({ phase, onBegin }) {
         style={{
           maxWidth: 640,
           width: '92vw',
+          maxHeight: '90vh',
+          overflowY: 'auto',
           border: `1px solid ${data.accentBorder}`,
           background: 'linear-gradient(145deg, #0d1117 0%, #0a0d18 100%)',
           boxShadow: `0 0 60px ${data.accentBg}, 0 24px 64px rgba(0,0,0,0.6)`,

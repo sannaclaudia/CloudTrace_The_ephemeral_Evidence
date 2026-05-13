@@ -13,9 +13,9 @@ const TOUR_STEPS = {
     { target: 'bucket-grid', title: 'Forensic Metadata', text: 'Focus on Last Modified and Replication Timestamps. Primary buckets typically do not have a Replication Timestamp.', position: 'bottom' },
   ],
   PHASE3: [
-    { target: 'cloudtrail-logs', title: 'Event Logs', text: 'Here are the CloudTrail logs. They record every API call made in the AWS account.', position: 'right' },
-    { target: 'attack-chain', title: 'Kill Chain', text: 'Reconstruct the full attack chain by placing events in chronological order, from initial credential theft to data exfiltration.', position: 'left' },
-    { target: 'attribution-panel', title: 'Attribution', text: 'Finally, identify the true Attacker IP, the original stolen AKIA credential, and the execution Role ARN to complete the investigation.', position: 'top' }
+    { target: 'cloudtrail-logs', title: 'Event Logs', text: 'Here are the CloudTrail logs. They record every API call made in the AWS account.', position: 'bottom' },
+    { target: 'attack-chain', title: 'Kill Chain', text: 'Reconstruct the full attack chain by placing events in chronological order, from initial credential theft to data exfiltration.', position: 'bottom' },
+    { target: 'attribution-panel', title: 'Attribution', text: 'Finally, identify the true Attacker IP, the original stolen AKIA credential, and the execution Role ARN to complete the investigation.', position: 'left' }
   ]
 };
 
@@ -57,9 +57,10 @@ export default function GuidedTour({ phase, onComplete }) {
   const currentStep = steps[stepIndex];
   
   let popoverStyle = { 
-    position: 'fixed', zIndex: 9999, width: 320, 
+    position: 'fixed', zIndex: 9999, width: 380, 
+    maxHeight: '80vh', overflowY: 'auto',
     background: 'var(--color-surface)', border: '1px solid var(--color-primary)', 
-    borderRadius: '12px', padding: '1.25rem', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', 
+    borderRadius: '12px', padding: '1.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', 
     transition: 'all 0.3s ease' 
   };
 
@@ -79,7 +80,7 @@ export default function GuidedTour({ phase, onComplete }) {
     }
     
     // bounds check
-    if (popoverStyle.left && typeof popoverStyle.left === 'number' && popoverStyle.left + 320 > window.innerWidth) popoverStyle.left = window.innerWidth - 336;
+    if (popoverStyle.left && typeof popoverStyle.left === 'number' && popoverStyle.left + 380 > window.innerWidth) popoverStyle.left = window.innerWidth - 396;
     if (popoverStyle.bottom && typeof popoverStyle.bottom === 'number' && popoverStyle.bottom + 200 > window.innerHeight) popoverStyle.bottom = window.innerHeight - 216;
   } else {
     popoverStyle.top = '50%';
