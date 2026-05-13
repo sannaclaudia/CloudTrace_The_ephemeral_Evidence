@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ChevronRight, Shield, AlertCircle } from 'lucide-react';
+import { X, ChevronRight, Shield, Database, Activity, Lock } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 
 const SLIDES = [
@@ -54,12 +54,41 @@ const SLIDES = [
             <span><strong>Log Analysis & Attribution</strong> — Trace malicious API tokens back to their original root credential</span>
           </div>
         </div>
-        <p className="mt-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          Every wrong action reduces your <strong>Admissibility Score</strong> — a measure of evidence integrity.
-        </p>
       </>
     ),
   },
+  {
+    icon: '🖥️',
+    title: 'Interface Overview',
+    content: (
+      <>
+        <p className="mb-4">Get familiar with your digital forensics toolkit:</p>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="p-3 rounded border border-gray-700 bg-gray-800 flex items-start gap-2">
+            <Activity className="text-primary shrink-0" size={16} />
+            <div>
+              <strong className="block text-primary mb-1">Admissibility Score</strong>
+              Start with 100 points. Every non-forensically sound action deducts points. If it drops too low, your evidence won't hold up in court!
+            </div>
+          </div>
+          <div className="p-3 rounded border border-gray-700 bg-gray-800 flex items-start gap-2">
+            <Lock className="text-secondary shrink-0" size={16} />
+            <div>
+              <strong className="block text-secondary mb-1">Evidence Locker</strong>
+              Toggles a side-panel. Every action you take is permanently logged here to maintain Chain of Custody.
+            </div>
+          </div>
+          <div className="p-3 rounded border border-gray-700 bg-gray-800 col-span-2 flex items-start gap-2">
+            <Database className="text-green-500 shrink-0" size={16} />
+            <div>
+              <strong className="block text-green-500 mb-1">Action Modals & Timeline HUD</strong>
+              Read carefully before clicking. Buttons correspond to terminal commands or AWS API calls. Watch for countdown timers.
+            </div>
+          </div>
+        </div>
+      </>
+    ),
+  }
 ];
 
 export default function TutorialModal({ dispatch }) {
@@ -69,27 +98,27 @@ export default function TutorialModal({ dispatch }) {
     if (step < SLIDES.length - 1) {
       setStep(s => s + 1);
     } else {
-      dispatch({ type: ACTIONS.SKIP_TUTORIAL });
+      dispatch({ type: ACTIONS.HIDE_HOW_TO_PLAY });
     }
   };
 
-  const skip = () => dispatch({ type: ACTIONS.SKIP_TUTORIAL });
+  const skip = () => dispatch({ type: ACTIONS.HIDE_HOW_TO_PLAY });
 
   const slide = SLIDES[step];
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '560px' }}>
+      <div className="modal" style={{ maxWidth: '650px', border: '1px solid rgba(99, 102, 241, 0.4)' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Shield size={18} style={{ color: 'var(--color-primary)' }} />
             <span className="font-semibold text-sm" style={{ color: 'var(--color-primary)' }}>
-              CloudTrace — Briefing
+              How to Play / Briefing
             </span>
           </div>
           <button onClick={skip} className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-            <X size={14} /> Skip
+            <X size={14} /> Close
           </button>
         </div>
 
@@ -100,7 +129,7 @@ export default function TutorialModal({ dispatch }) {
         </div>
 
         {/* Content */}
-        <div className="mb-6 text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: '1.7' }}>
+        <div className="mb-6 text-sm" style={{ color: 'var(--color-text-muted)', lineHeight: '1.7', minHeight: '180px' }}>
           {slide.content}
         </div>
 
@@ -111,20 +140,22 @@ export default function TutorialModal({ dispatch }) {
               <div
                 key={i}
                 style={{
-                  width: i === step ? '20px' : '8px',
+                  width: i === step ? '24px' : '8px',
                   height: '8px',
                   borderRadius: '4px',
                   background: i === step ? 'var(--color-primary)' : 'var(--color-border-bright)',
                   transition: 'all 0.3s',
+                  cursor: 'pointer'
                 }}
+                onClick={() => setStep(i)}
               />
             ))}
           </div>
           <button className="btn btn-primary" onClick={next}>
             {step < SLIDES.length - 1 ? (
-              <><span>Next</span><ChevronRight size={16} /></>
+              <><span>Next Slide</span><ChevronRight size={16} /></>
             ) : (
-              <><span>Start Investigation</span><ChevronRight size={16} /></>
+              <><span>Done</span><ChevronRight size={16} /></>
             )}
           </button>
         </div>

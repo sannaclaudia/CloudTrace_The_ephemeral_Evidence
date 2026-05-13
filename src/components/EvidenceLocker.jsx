@@ -67,7 +67,7 @@ export default function EvidenceLocker({ state, onClose }) {
     <>
       <div
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, zIndex: 799, background: 'rgba(0,0,0,0.3)' }}
+        style={{ position: 'fixed', top: '52px', left: 0, right: 0, bottom: 0, zIndex: 799, background: 'rgba(0,0,0,0.3)' }}
       />
       <div className="evidence-locker">
         {/* Header */}

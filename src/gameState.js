@@ -1,6 +1,7 @@
 // Central game state and reducer for CloudTrace: The Ephemeral Evidence
 
 export const PHASES = {
+  MAIN_MENU: 'MAIN_MENU',
   TUTORIAL: 'TUTORIAL',
   PHASE1: 'PHASE1',
   PHASE2: 'PHASE2',
@@ -9,7 +10,7 @@ export const PHASES = {
 };
 
 export const INITIAL_STATE = {
-  phase: PHASES.TUTORIAL,
+  phase: PHASES.MAIN_MENU,
   admissibilityScore: 100,
   actions: [],
 
@@ -39,6 +40,10 @@ export const INITIAL_STATE = {
 };
 
 export const ACTIONS = {
+  LOAD_STATE: 'LOAD_STATE',
+  NEW_GAME: 'NEW_GAME',
+  SHOW_HOW_TO_PLAY: 'SHOW_HOW_TO_PLAY',
+  HIDE_HOW_TO_PLAY: 'HIDE_HOW_TO_PLAY',
   SKIP_TUTORIAL: 'SKIP_TUTORIAL',
   ADVANCE_TUTORIAL: 'ADVANCE_TUTORIAL',
 
@@ -82,12 +87,24 @@ const deductScore = (state, amount) => ({
 export function gameReducer(state, action) {
   switch (action.type) {
 
-    case ACTIONS.ADVANCE_TUTORIAL:
-      if (state.tutorialStep >= 2) return { ...state, phase: PHASES.PHASE1 };
-      return { ...state, tutorialStep: state.tutorialStep + 1 };
+    case ACTIONS.LOAD_STATE:
+      return { ...action.payload };
+
+    case ACTIONS.NEW_GAME:
+      return { ...INITIAL_STATE, phase: PHASES.PHASE1 };
+
+    case ACTIONS.RESET_GAME:
+      return { ...INITIAL_STATE, phase: PHASES.MAIN_MENU };
+
+    case ACTIONS.SHOW_HOW_TO_PLAY:
+      return { ...state, phase: PHASES.TUTORIAL, previousPhase: state.phase };
+
+    case ACTIONS.HIDE_HOW_TO_PLAY:
+      return { ...state, phase: state.previousPhase || PHASES.MAIN_MENU };
 
     case ACTIONS.SKIP_TUTORIAL:
-      return { ...state, phase: PHASES.PHASE1 };
+      return { ...state, phase: state.previousPhase || PHASES.PHASE1 };
+
 
     /* ─── PHASE 1 ─── */
     case ACTIONS.POWER_OFF_VM: {
@@ -259,9 +276,6 @@ export function gameReducer(state, action) {
         hintsUsed: { ...state.hintsUsed, [hintPhase]: current + 1 },
       };
     }
-
-    case ACTIONS.RESET_GAME:
-      return { ...INITIAL_STATE, phase: PHASES.PHASE1 };
 
     default:
       return state;

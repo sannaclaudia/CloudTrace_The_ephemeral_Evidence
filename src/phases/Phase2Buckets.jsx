@@ -1,20 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Database, Search, ChevronRight, ChevronDown, CheckCircle, ShieldAlert, Cpu, AlertTriangle, Lock } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 import bucketsData from '../data/buckets.json';
 
 // SHA-256 simulated hashes for each bucket
 const BUCKET_HASHES = {
-  'bucket-primary':  'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
-  'bucket-replica1': 'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
-  'bucket-replica2': 'sha256:b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2',
+  'replica-a':  'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
+  'replica-b': 'sha256:a9f2e1b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1',
+  'replica-c': 'sha256:b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2',
 };
 
 // Simulated lifecycle policies — one bucket has a deletion policy set by attacker
 const LIFECYCLE_POLICIES = {
-  'bucket-primary':  { hasDeletion: false, policy: 'No expiration rules configured.' },
-  'bucket-replica1': { hasDeletion: true,  policy: 'DANGER: Expiration rule detected — objects with prefix "/" deleted after 1 day. Attacker-set lifecycle rule! Evidence at risk.' },
-  'bucket-replica2': { hasDeletion: false, policy: 'No expiration rules configured.' },
+  'replica-a':  { hasDeletion: false, policy: 'No expiration rules configured.' },
+  'replica-b': { hasDeletion: true,  policy: 'DANGER: Expiration rule detected — objects with prefix "/" deleted after 1 day. Attacker-set lifecycle rule! Evidence at risk.' },
+  'replica-c': { hasDeletion: false, policy: 'No expiration rules configured.' },
 };
 
 export default function Phase2Buckets({ state, dispatch, addToast }) {

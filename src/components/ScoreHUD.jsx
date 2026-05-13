@@ -38,6 +38,7 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
 
   return (
     <header style={{
+      flexShrink: 0,
       background: 'var(--color-surface)',
       borderBottom: '1px solid var(--color-border)',
       padding: '0 1.5rem',
@@ -45,7 +46,7 @@ export default function ScoreHUD({ phase, admissibilityScore, onLegend, onLocker
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      position: 'sticky', top: 0, zIndex: 700,
+      zIndex: 700,
     }}>
       {/* Left: brand */}
       <div className="flex items-center gap-2">

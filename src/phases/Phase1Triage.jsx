@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Power, HardDrive, Wifi, WifiOff, Camera, Clock, Activity,
   Server, Network, ShieldCheck, Terminal, CheckCircle, AlertTriangle,
-  HelpCircle, Eye,
+  HelpCircle, Eye, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 
@@ -155,6 +155,36 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   };
 
   const CONSOLE_ACTIONS = [
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-xl font-bold mb-0.5">Phase 1: Containment & Triage</h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Anomalous exfiltration detected on EC2 instance i-0abcd1234efgh5678. Take immediate forensic action.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+          <button className="btn btn-ghost" onClick={handleUseHint} disabled={hintsUsed >= 3}>
+            <HelpCircle size={16} /> Request Hint ({3 - hintsUsed} left)
+          </button>
+        </div>
+      </div>
+
+      {hintsUsed > 0 && (
+        <div className="card mb-6" style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.3)' }}>
+          <div className="flex items-center gap-2 mb-2" style={{ color: '#818cf8' }}>
+            <Eye size={16} />
+            <span className="font-bold text-sm">Active Hints</span>
+          </div>
+          <ul className="text-sm space-y-2" style={{ color: 'var(--color-text)', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
+            {HINTS.slice(0, hintsUsed).map((hint, idx) => (
+              <li key={idx} dangerouslySetInnerHTML={{ __html: hint }} />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* VM Overview Card */}
+      <div className="grid gap-6 md:grid-cols-2 mb-6">
     {
       id: 'pause', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,
       label: 'Evoke ACPI S3 (Sleep)', sub: 'Trigger hypervisor-level S3 sleep state',
@@ -199,13 +229,30 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
             Threat: Active Exfiltration. Secure the instance and acquire volatile data before auto-scaling termination.
           </p>
         </div>
-        <div className="text-right">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
           <div className="flex items-center gap-2 justify-end mb-1">
             <span className="font-mono text-lg font-bold" style={{ color: '#ef4444' }}>Critical Priority</span>
           </div>
-          <div className="text-xs mt-1" style={{ color: 'var(--color-text-dim)' }}>Data exfiltration in progress</div>
+          <button className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={handleUseHint} disabled={hintsUsed >= 3}>
+            <HelpCircle size={14} /> Request Hint ({3 - hintsUsed} left)
+          </button>
         </div>
       </div>
+
+      {/* Hints Display */}
+      {hintsUsed > 0 && (
+        <div className="card mb-6" style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.3)' }}>
+          <div className="flex items-center gap-2 mb-2" style={{ color: '#818cf8' }}>
+            <Eye size={16} />
+            <span className="font-bold text-sm">Active Hints</span>
+          </div>
+          <ul className="text-sm space-y-2" style={{ color: 'var(--color-text)', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
+            {HINTS.slice(0, hintsUsed).map((hint, idx) => (
+              <li key={idx} dangerouslySetInnerHTML={{ __html: hint }} />
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Two-column grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', flex: 1, alignItems: 'start' }}>

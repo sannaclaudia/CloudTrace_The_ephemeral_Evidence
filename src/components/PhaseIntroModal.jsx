@@ -80,7 +80,6 @@ const PHASE_DATA = {
 };
 
 export default function PhaseIntroModal({ phase, onBegin }) {
-  const [step, setStep] = useState(0);
   const data = PHASE_DATA[phase];
   if (!data) return null;
 
