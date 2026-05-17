@@ -15,8 +15,7 @@ const EVENT_COLOR = {
   GetCallerIdentity: '#94a3b8',
 };
 
-// Key events for the timeline strip (chronological subset)
-const TIMELINE_EVENTS = [
+const TIMELINE_EVENTS_FINAL = [
   { time: '09:12', event: 'GetCallerIdentity', color: '#94a3b8', icon: '🔍', label: 'Recon' },
   { time: '09:14', event: 'ListBuckets', color: '#94a3b8', icon: '🗂️', label: 'Enum' },
   { time: '09:21', event: 'AssumeRole ×1', color: '#f59e0b', icon: '🎭', label: 'Pivot 1' },
@@ -26,60 +25,35 @@ const TIMELINE_EVENTS = [
   { time: '09:44', event: 'DeleteTrail', color: '#ef4444', icon: '🗑️', label: 'Cover' },
 ];
 
-// Attack chain nodes — shown in scrambled order, must be placed in correct order
-const CHAIN_NODES = [
-  {
-    id: 'cred',
-    order: 1,
-    icon: '🔑',
-    title: 'Credential Theft',
-    desc: 'Permanent IAM key AKIAIOSFODNN7DEV01A3 exfiltrated from developer workstation',
-    color: '#ef4444',
-  },
-  {
-    id: 'recon',
-    order: 2,
-    icon: '🔭',
-    title: 'Initial Reconnaissance',
-    desc: 'GetCallerIdentity + ListBuckets executed from 185.220.101.47 to enumerate AWS environment',
-    color: '#f59e0b',
-  },
-  {
-    id: 'role1',
-    order: 3,
-    icon: '🎭',
-    title: 'First Role Pivot',
-    desc: 'AssumeRole → AutomationServiceRole — ASIA session token generated, original IP masked',
-    color: '#f59e0b',
-  },
-  {
-    id: 'role2',
-    order: 4,
-    icon: '🔗',
-    title: 'Role Chaining',
-    desc: 'AssumeRole → DBSyncServiceRole — second lateral movement, elevated EC2 permissions acquired',
-    color: '#f59e0b',
-  },
-  {
-    id: 'exec',
-    order: 5,
-    icon: '💣',
-    title: 'Impact: RunInstances',
-    desc: 'Malicious EC2 instance launched via ec2.amazonaws.com endpoint (source IP no longer attacker\'s)',
-    color: '#ef4444',
-  },
-  {
-    id: 'exfil',
-    order: 6,
-    icon: '📤',
-    title: 'Data Exfiltration',
-    desc: 'PutObject to staging S3 bucket — sensitive corporate data written for remote retrieval',
-    color: '#ef4444',
-  },
+const CHAIN_NODES_FINAL = [
+  { id: 'cred', order: 1, icon: '🔑', title: 'Credential Theft', desc: 'Permanent IAM key AKIAIOSFODNN7DEV01A3 exfiltrated from developer workstation', color: '#ef4444' },
+  { id: 'recon', order: 2, icon: '🔭', title: 'Initial Reconnaissance', desc: 'GetCallerIdentity + ListBuckets executed from 185.220.101.47 to enumerate AWS environment', color: '#f59e0b' },
+  { id: 'role1', order: 3, icon: '🎭', title: 'First Role Assumption', desc: 'AssumeRole into arn:aws:iam::123456789012:role/DevOps-Admin-Role', color: '#f59e0b' },
+  { id: 'role2', order: 4, icon: '🔗', title: 'Role Chaining (Privesc)', desc: 'From DevOps-Admin-Role, assumed arn:aws:iam::123456789012:role/Prod-SecOps-Master', color: '#ef4444' },
+  { id: 'impact', order: 5, icon: '💣', title: 'Ransomware Impact', desc: 'RunInstances deployed crypto-mining/encryption payload onto PROD-DB-01', color: '#ef4444' },
+  { id: 'exfil', order: 6, icon: '📤', title: 'Data Exfiltration', desc: 'PutObject exfil_dump_20241114.tar.gz written to backup bucket via compromised instance', color: '#f59e0b' },
+  { id: 'cover', order: 7, icon: '🗑️', title: 'Attempted Cover-up', desc: 'DeleteTrail initiated on DefaultCorpTrail to wipe audit history', color: '#94a3b8' },
 ];
 
-// Scrambled display order
-const SCRAMBLED = [3, 5, 1, 6, 2, 4].map(i => CHAIN_NODES[i - 1]);
+const TIMELINE_EVENTS_CHALLENGE = [
+  { time: '09:12', event: 'Reconnaissance', color: '#94a3b8', icon: '🔍', label: 'Recon' },
+  { time: '09:21', event: 'Assume Role', color: '#f59e0b', icon: '🎭', label: 'Privilege' },
+  { time: '09:23', event: 'Launch Crypto Miner', color: '#ef4444', icon: '💣', label: 'Impact' },
+  { time: '09:31', event: 'Upload Exfiltrated Data', color: '#f59e0b', icon: '📤', label: 'Exfil' },
+  { time: '09:44', event: 'Delete Logs', color: '#ef4444', icon: '🗑️', label: 'Cover' },
+];
+
+const CHAIN_NODES_CHALLENGE = [
+  { id: 'cred', order: 1, icon: '🔑', title: 'Stolen Passwords', desc: 'Attacker stole password from Github', color: '#ef4444' },
+  { id: 'recon', order: 2, icon: '🔭', title: 'Looking Around', desc: 'Attacker runs commands to see what they can access', color: '#f59e0b' },
+  { id: 'role1', order: 3, icon: '🎭', title: 'Get Admin Rights', desc: 'Switches to the administrator account', color: '#f59e0b' },
+  { id: 'impact', order: 4, icon: '💣', title: 'Deploy Malware', desc: 'Deploys malware dropping crypto miners on servers', color: '#ef4444' },
+  { id: 'exfil', order: 5, icon: '📤', title: 'Steal Data', desc: 'Uploads stolen data to a remote bucket', color: '#f59e0b' },
+  { id: 'cover', order: 6, icon: '🗑️', title: 'Clear Audit Logs', desc: 'Deletes the main logs to hide tracks', color: '#94a3b8' },
+];
+
+const SCRAMBLED_FINAL = [3, 5, 1, 6, 2, 7, 4].map(i => CHAIN_NODES_FINAL[i - 1]);
+const SCRAMBLED_CHALLENGE = [5, 2, 6, 1, 4, 3].map(i => CHAIN_NODES_CHALLENGE[i - 1]);
 
 const HINTS = [
   'The RunInstances event shows ec2.amazonaws.com as source IP. That\'s not the attacker — it\'s an AWS-internal endpoint. Look for an AssumeRole event BEFORE this call.',
@@ -102,22 +76,48 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
   const [chainResult, setChainResult] = useState(null); // null | 'correct' | 'wrong'
   const [chainAttempts, setChainAttempts] = useState(0);
 
+  const timelineEvents = state.gameMode === 'Challenge' ? TIMELINE_EVENTS_CHALLENGE : TIMELINE_EVENTS_FINAL;
+  const chainNodes = state.gameMode === 'Challenge' ? CHAIN_NODES_CHALLENGE : CHAIN_NODES_FINAL;
+  const scrambledData = state.gameMode === 'Challenge' ? SCRAMBLED_CHALLENGE : SCRAMBLED_FINAL;
+
+  const displayLogs = useMemo(() => {
+    if (state.gameMode === 'Challenge') {
+      return logsData.map(log => {
+        let newLog = { ...log };
+        // Change attacker IP
+        if (newLog.sourceIPAddress && newLog.sourceIPAddress === '185.220.101.47') {
+          newLog.sourceIPAddress = '199.199.199.199';
+        }
+        // Change role name and access key in properties
+        if (newLog.userIdentity && newLog.userIdentity.accessKeyId === 'AKIAIOSFODNN7DEV01A3') {
+          newLog.userIdentity = { ...newLog.userIdentity, accessKeyId: 'AKIA_STOLEN_KEY_7777' };
+        }
+        return newLog;
+      });
+    }
+    return logsData;
+  }, [state.gameMode]);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return logsData;
-    return logsData.filter(log =>
+    if (!q) return displayLogs;
+    return displayLogs.filter(log =>
       log.eventName.toLowerCase().includes(q) ||
       log.sourceIPAddress.toLowerCase().includes(q) ||
       (log.userIdentity?.accessKeyId || '').toLowerCase().includes(q) ||
       (log.userIdentity?.userName || '').toLowerCase().includes(q) ||
       (log.requestParameters?.roleArn || '').toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, displayLogs]);
 
   const handleSubmit = () => {
     dispatch({ type: ACTIONS.SUBMIT_INVESTIGATION, payload: { ip: submitIp, apiKey: submitKey, roleArn: submitRole } });
-    const ipC = submitIp.trim() === '185.220.101.47';
-    const keyC = submitKey.trim() === 'AKIAIOSFODNN7DEV01A3';
+    
+    const targetIp = state.gameMode === 'Challenge' ? '199.199.199.199' : '185.220.101.47';
+    const targetKey = state.gameMode === 'Challenge' ? 'AKIA_STOLEN_KEY_7777' : 'AKIAIOSFODNN7DEV01A3';
+    
+    const ipC = submitIp.trim() === targetIp;
+    const keyC = submitKey.trim() === targetKey;
     const roleC = submitRole.trim() === 'arn:aws:iam::123456789012:role/AutomationServiceRole';
     if (!ipC || !keyC || !roleC) {
       let err = 'One or more attribution fields are incorrect.';
@@ -151,7 +151,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
 
   const handleChainSubmit = () => {
     setChainAttempts(n => n + 1);
-    const correctOrder = CHAIN_NODES.map(n => n.id);
+    const correctOrder = chainNodes.map(n => n.id);
     const isCorrect = chainOrder.length === correctOrder.length &&
       chainOrder.every((id, i) => id === correctOrder[i]);
     if (isCorrect) {
@@ -214,7 +214,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
           {/* Baseline */}
           <div style={{ position: 'absolute', left: 0, right: 0, top: '1.2rem', height: 2, background: 'linear-gradient(to right, #1e2130, #4f46e5 20%, #ef4444 80%, #1e2130)' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.25rem' }}>
-            {TIMELINE_EVENTS.map((ev, i) => (
+            {timelineEvents.map((ev, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
                 <div style={{ fontSize: '0.65rem', color: 'var(--color-text-dim)', marginBottom: '0.3rem', fontFamily: 'monospace' }}>{ev.time}</div>
                 <div style={{
@@ -251,7 +251,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
               onChange={e => setSearch(e.target.value)}
             />
             <span className="text-xs font-mono" style={{ color: 'var(--color-text-dim)', flexShrink: 0 }}>
-              {filtered.length}/{logsData.length}
+              {filtered.length}/{displayLogs.length}
             </span>
           </div>
 
@@ -323,7 +323,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
             <div className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-dim)' }}>Your Chain (click placed items to remove):</div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {chainOrder.map((id, idx) => {
-                const node = CHAIN_NODES.find(n => n.id === id);
+                const node = chainNodes.find(n => n.id === id);
                 return (
                   <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     <div
@@ -351,7 +351,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
         <div id="attack-chain">
         {!state.attackChainCompleted && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', marginBottom: '1rem' }}>
-            {SCRAMBLED.map(node => {
+            {scrambledData.map(node => {
               const placed = chainOrder.includes(node.id);
               const placedIdx = chainOrder.indexOf(node.id);
               return (
@@ -389,7 +389,7 @@ export default function Phase3Logs({ state, dispatch, addToast }) {
         {/* Completed state */}
         {state.attackChainCompleted && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem' }}>
-            {CHAIN_NODES.map((node, idx) => (
+            {chainNodes.map((node, idx) => (
               <div key={node.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
                 {idx > 0 && <div style={{ width: '100%', height: 2, background: '#22c55e', opacity: 0.4, marginBottom: 2 }} />}
                 <div style={{ padding: '0.5rem', borderRadius: 6, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', textAlign: 'center', width: '100%' }}>

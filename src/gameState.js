@@ -289,8 +289,11 @@ export function gameReducer(state, action) {
 
     case ACTIONS.SUBMIT_INVESTIGATION: {
       const { ip, apiKey, roleArn } = action.payload;
-      const ipCorrect = ip.trim() === '185.220.101.47';
-      const keyCorrect = apiKey.trim() === 'AKIAIOSFODNN7DEV01A3';
+      const targetIp = state.gameMode === 'Challenge' ? '199.199.199.199' : '185.220.101.47';
+      const targetKey = state.gameMode === 'Challenge' ? 'AKIA_STOLEN_KEY_7777' : 'AKIAIOSFODNN7DEV01A3';
+      
+      const ipCorrect = ip.trim() === targetIp;
+      const keyCorrect = apiKey.trim() === targetKey;
       const roleCorrect = roleArn.trim() === 'arn:aws:iam::123456789012:role/AutomationServiceRole';
       const next = { ...state, submittedIp: ip, submittedApiKey: apiKey, submittedRoleArn: roleArn };
 

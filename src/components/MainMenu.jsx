@@ -18,12 +18,11 @@ export default function MainMenu({ dispatch }) {
 
   const [hasSave] = useState(initialHasSave);
   const [setupMode, setSetupMode] = useState(false);
-  const [gameMode, setGameMode] = useState('Guided');
-  const [timerMode, setTimerMode] = useState('Story');
+  const [gameMode, setGameMode] = useState('Final Exam');
 
   const handleStartInvestigation = () => {
-    dispatch({ type: ACTIONS.SET_DIFFICULTY, payload: { gameMode, timerMode } });
-    dispatch({ type: ACTIONS.NEW_GAME, payload: { gameMode, timerMode } });
+    dispatch({ type: ACTIONS.SET_DIFFICULTY, payload: { gameMode, timerMode: 'Story' } });
+    dispatch({ type: ACTIONS.NEW_GAME, payload: { gameMode, timerMode: 'Story' } });
   };
 
   const handleContinue = () => {
@@ -107,29 +106,7 @@ export default function MainMenu({ dispatch }) {
               </div>
             </div>
 
-            <div className="mb-8">
-              <h3 className="font-semibold mb-3 text-sm" style={{ color: '#94a3b8' }}>Select Investigation Pacing</h3>
-              <div className="space-y-2">
-                {['Story', 'Relaxed', 'Fast Run'].map(mode => (
-                  <div 
-                    key={mode}
-                    onClick={() => setTimerMode(mode)}
-                    style={{
-                      padding: '0.75rem 1rem', border: `1px solid ${timerMode === mode ? 'var(--color-success)' : 'var(--color-border)'}`,
-                      borderRadius: '8px', cursor: 'pointer', background: timerMode === mode ? 'rgba(34,197,94,0.1)' : 'var(--color-bg)',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                    }}
-                  >
-                    <span className="font-semibold text-sm" style={{ color: timerMode === mode ? 'var(--color-success)' : 'var(--color-text)' }}>{mode}</span>
-                    <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
-                      {mode === 'Story' ? 'No Time Limit' : mode === 'Relaxed' ? '45 Minutes' : '30 Minutes'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-8">
               <button className="btn btn-ghost flex-1 justify-center" onClick={() => setSetupMode(false)}>
                 <ArrowLeft size={16} /> Back
               </button>

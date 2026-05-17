@@ -40,6 +40,13 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
     addToast({ type: 'info', title: `Hint ${hintsUsed + 1}/3 Unlocked`, message: '−5 Admissibility' });
   };
 
+  const displayBuckets = state.gameMode === 'Challenge' ? bucketsData.map(b => {
+    if (b.id === 'replica-a') return { ...b, isPrimary: false, name: 'backup-replica-east', notes: 'Replica bucket. Files are copied here.' };
+    if (b.id === 'replica-b') return { ...b, isPrimary: true, name: 'primary-storage-prod', notes: 'Source bucket. The original location of the files.' };
+    if (b.id === 'replica-c') return { ...b, isPrimary: false, name: 'disaster-recovery-asia', notes: 'Secondary async replica. Out of sync.' };
+    return b;
+  }) : bucketsData;
+
   const handleSelect = (id) => {
     if (state.phase2Correct) return;
     dispatch({ type: ACTIONS.SELECT_BUCKET, payload: id });
@@ -55,12 +62,12 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
       return;
     }
 
-    const selected = bucketsData.find(b => b.id === state.selectedBucketId);
+    const selected = displayBuckets.find(b => b.id === state.selectedBucketId);
     if (!selected.isPrimary) {
-      dispatch({ type: ACTIONS.PHASE2_CONFIRM, payload: { buckets: bucketsData } });
+      dispatch({ type: ACTIONS.PHASE2_CONFIRM, payload: { buckets: displayBuckets } });
       setWrongModal(true);
     } else {
-      dispatch({ type: ACTIONS.PHASE2_CONFIRM, payload: { buckets: bucketsData } });
+      dispatch({ type: ACTIONS.PHASE2_CONFIRM, payload: { buckets: displayBuckets } });
     }
   };
 
@@ -126,7 +133,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
       )}
 
       <div id="bucket-grid" className="grid gap-4 md:grid-cols-3 mb-6">
-        {bucketsData.map(bucket => {
+        {displayBuckets.map(bucket => {
           const isSelected = state.selectedBucketId === bucket.id;
           const isExpanded = expanded === bucket.id;
           
@@ -218,7 +225,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
 
       {/* Expanded Details Pane */}
       {expanded && (() => {
-        const bucket = bucketsData.find(b => b.id === expanded);
+        const bucket = displayBuckets.find(b => b.id === expanded);
         return (
           <div className="card mb-6" style={{ background: 'var(--color-surface-2)' }}>
             <h3 className="font-bold mb-4 text-sm flex items-center gap-2">
@@ -311,7 +318,7 @@ export default function Phase2Buckets({ state, dispatch, addToast }) {
         <div className="text-sm">
           Selected Target: 
           <span className="font-bold ml-2 font-mono" style={{ color: state.selectedBucketId ? 'var(--color-primary)' : 'var(--color-text-dim)' }}>
-            {state.selectedBucketId ? bucketsData.find(b => b.id === state.selectedBucketId).name : 'None selected'}
+            {state.selectedBucketId ? displayBuckets.find(b => b.id === state.selectedBucketId).name : 'None selected'}
           </span>
         </div>
         <button 
